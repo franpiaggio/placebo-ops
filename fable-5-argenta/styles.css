@@ -1,0 +1,398 @@
+/* ═══════════════════════════════════════════════════════════════
+   SIGA·SIGA · Ente Autárquico de Monitoreo de la Argentinidad
+   Carbón de parrilla + celeste bandera + sol de mayo + brasa.
+   Tipografía 100% argentina: Chivo / Chivo Mono (Omnibus-Type, BsAs).
+   ═══════════════════════════════════════════════════════════════ */
+
+:root{
+  --carbon:    #131110;
+  --panel:     #191614;
+  --panel-2:   #201c19;
+  --linea:     #2e2823;
+  --linea-hi:  #4a3f35;
+  --tinta:     #e8e0d5;
+  --tinta-hi:  #faf6ee;
+  --gris:      #8a7f72;
+  --tenue:     #55493d;
+
+  --celeste:   #75aadb;   /* bandera */
+  --celeste-hi:#a8cbe9;
+  --gold:      #f6b40e;   /* sol de mayo */
+  --gold-dim:  #a97d14;
+  --brasa:     #ff6b35;   /* fuego de parrilla */
+  --brasa-dim: #b34a22;
+  --verde:     #7fb069;
+
+  --disp: "Chivo", system-ui, sans-serif;
+  --mono: "Chivo Mono", ui-monospace, monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(900px 500px at 50% -8%, #221c17 0%, transparent 60%),
+    var(--carbon);
+  color:var(--tinta);
+  font-family:var(--mono);
+  font-size:13px;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* texturas */
+.grano{
+  position:fixed;inset:0;z-index:80;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.vineta{
+  position:fixed;inset:0;z-index:81;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 46%, transparent 55%, rgba(0,0,0,.45) 100%);
+}
+
+/* ── Arranque ─────────────────────────────────────────────── */
+#boot{
+  position:fixed;inset:0;z-index:200;background:#0d0b0a;
+  display:flex;align-items:flex-start;padding:9vh 10vw;
+  transition:opacity .6s;
+}
+#boot.off{opacity:0;pointer-events:none}
+#bootText{
+  font-family:var(--mono);font-size:14px;line-height:1.85;
+  color:var(--gold);text-shadow:0 0 8px rgba(246,180,14,.4);white-space:pre-wrap;
+}
+
+/* ── Bardo ────────────────────────────────────────────────── */
+#bardo{
+  position:fixed;top:0;left:0;right:0;z-index:95;height:0;overflow:hidden;
+  background:repeating-linear-gradient(-45deg,#3d1505 0 18px,var(--brasa) 18px 36px);
+  display:flex;align-items:center;justify-content:center;
+  transition:height .25s;
+}
+body.bardo #bardo{height:30px}
+#bardo span{
+  font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;
+  color:#fff;background:rgba(30,8,0,.85);padding:2px 14px;white-space:nowrap;
+}
+body.bardo .consola{animation:tembleque .13s infinite}
+@keyframes tembleque{
+  0%,100%{transform:translate(0,0)}25%{transform:translate(-1px,1px)}
+  50%{transform:translate(1px,-1px)}75%{transform:translate(-1px,-1px)}
+}
+
+/* ── Grilla ───────────────────────────────────────────────── */
+.consola{
+  display:grid;height:100vh;padding:8px;gap:8px;
+  grid-template-columns:298px minmax(0,1fr) 348px;
+  grid-template-rows:56px minmax(0,1fr) 148px 212px;
+  grid-template-areas:
+    "cab   cab      cab"
+    "vit   mapa     alert"
+    "vit   ondas    alert"
+    "cotiz registro grupo";
+}
+.cabecera{grid-area:cab}
+#vitalesPanel{grid-area:vit}
+#mapaPanel{grid-area:mapa}
+#ondasPanel{grid-area:ondas}
+#alertasPanel{grid-area:alert}
+#cotizPanel{grid-area:cotiz}
+#registroPanel{grid-area:registro}
+#grupoPanel{grid-area:grupo}
+
+/* ── Chrome de panel ──────────────────────────────────────── */
+.panel{
+  position:relative;background:var(--panel);
+  border:1px solid var(--linea);
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+  opacity:0;
+}
+.panel::before,.panel::after{
+  content:"";position:absolute;width:11px;height:11px;pointer-events:none;z-index:2;
+}
+.panel::before{top:-1px;left:-1px;border-top:1px solid var(--gold-dim);border-left:1px solid var(--gold-dim)}
+.panel::after{bottom:-1px;right:-1px;border-bottom:1px solid var(--gold-dim);border-right:1px solid var(--gold-dim)}
+
+body.listo .panel,body.listo .cabecera{
+  animation:subir .55s cubic-bezier(.2,.7,.2,1) forwards;
+  animation-delay:calc(var(--d)*100ms);
+}
+@keyframes subir{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.ph{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  padding:6px 10px;border-bottom:1px dashed var(--linea);
+  font-size:10.5px;letter-spacing:.13em;color:var(--gris);
+  text-transform:uppercase;
+}
+.ph b{color:var(--gold);font-weight:700}
+.ph span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph .proj{flex:0 0 auto;font-size:9px;color:var(--tenue);letter-spacing:.08em}
+.ph.sub{border-top:1px dashed var(--linea);border-bottom:none}
+.pip{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.pip.ok{background:var(--celeste);box-shadow:0 0 6px rgba(117,170,219,.6);animation:pulso 2.4s infinite}
+.pip.warn{background:var(--gold);box-shadow:0 0 6px rgba(246,180,14,.6);animation:pulso 1.5s infinite}
+@keyframes pulso{50%{opacity:.35}}
+.ph-btn{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  background:none;border:1px solid var(--linea-hi);color:var(--gold);
+  padding:2px 8px;cursor:pointer;transition:.15s;
+}
+.ph-btn:hover{background:var(--gold);color:#221a04;box-shadow:0 0 8px rgba(246,180,14,.5)}
+
+/* ── Cabecera ─────────────────────────────────────────────── */
+.cabecera{
+  display:flex;align-items:center;gap:20px;
+  background:var(--panel);border:1px solid var(--linea);
+  padding:0 14px;opacity:0;position:relative;
+}
+.cabecera::before{
+  content:"";position:absolute;top:-1px;left:-1px;width:11px;height:11px;
+  border-top:1px solid var(--gold-dim);border-left:1px solid var(--gold-dim);
+}
+.cabecera::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,var(--celeste) 0 33%,#f5f0e6 33% 66%,var(--celeste) 66%);
+  opacity:.5;
+}
+.marca{display:flex;align-items:center;gap:12px}
+.sol{
+  width:34px;height:34px;border-radius:50%;position:relative;flex-shrink:0;
+  background:repeating-conic-gradient(var(--gold) 0 5deg, transparent 5deg 11.25deg);
+  animation:girarSol 60s linear infinite;
+  box-shadow:0 0 14px rgba(246,180,14,.3);
+}
+@keyframes girarSol{to{transform:rotate(360deg)}}
+.sol-cara{
+  position:absolute;inset:7px;border-radius:50%;
+  background:var(--gold);
+  box-shadow:inset -2px -2px 0 rgba(0,0,0,.25);
+}
+.marca-txt h1{
+  font-family:var(--disp);font-weight:900;font-size:22px;letter-spacing:.14em;
+  color:var(--gold);line-height:1;text-shadow:0 0 16px rgba(246,180,14,.35);
+}
+.marca-txt span{font-size:8.5px;letter-spacing:.14em;color:var(--gris)}
+
+.luces{display:flex;gap:14px;margin-left:auto}
+.luz{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;letter-spacing:.13em;color:var(--gris);
+}
+.luz i{width:8px;height:8px;border-radius:50%;background:var(--tenue)}
+.luz.on i{background:var(--celeste);box-shadow:0 0 7px rgba(117,170,219,.7)}
+.luz.warn i{background:var(--gold);box-shadow:0 0 7px rgba(246,180,14,.7);animation:pulso 1.8s infinite}
+.luz.err i{background:var(--brasa);box-shadow:0 0 8px rgba(255,107,53,.8);animation:pulso .45s infinite}
+
+.cabecera-der{display:flex;align-items:center;gap:16px}
+.relojbox{text-align:right}
+.hora{
+  font-size:22px;font-weight:700;color:var(--tinta-hi);
+  letter-spacing:.07em;line-height:1.1;font-variant-numeric:tabular-nums;
+}
+.hora-sub{font-size:9px;letter-spacing:.1em;color:var(--gris)}
+.hora-sub span{color:var(--celeste)}
+
+#bardoBtn{
+  position:relative;width:78px;height:36px;cursor:pointer;
+  background:repeating-linear-gradient(-45deg,#2a1206 0 7px,#5c2410 7px 14px);
+  border:1px solid var(--brasa);color:#ffd9c4;
+  font-family:var(--disp);font-weight:900;font-size:12px;letter-spacing:.16em;
+  transition:.15s;
+}
+#bardoBtn:hover{box-shadow:0 0 14px rgba(255,107,53,.5);color:#fff}
+#bardoBtn:active{transform:translateY(1px)}
+#bardoBtn.armado{background:var(--brasa);color:#2a0d00}
+
+/* ── MOD 01 · Vitales ─────────────────────────────────────── */
+.vitales{
+  flex:1;overflow:hidden;display:flex;flex-direction:column;
+  justify-content:space-evenly;padding:3px 10px;min-height:0;
+}
+.vital{display:flex;align-items:center;gap:8px;padding:2px 0}
+.vital .vl{flex:1;min-width:0}
+.vital .vnombre{
+  font-size:9px;letter-spacing:.1em;color:var(--gris);text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.vital .vvalor{
+  font-size:16.5px;font-weight:700;color:var(--gold);
+  text-shadow:0 0 8px rgba(246,180,14,.3);font-variant-numeric:tabular-nums;line-height:1.25;
+}
+.vital .vvalor small{font-size:10px;color:var(--gold-dim);font-weight:400;margin-left:3px}
+.vital .vvalor .estado{font-size:10px;color:var(--celeste);font-weight:400;margin-left:5px;letter-spacing:.06em}
+.vital .vvalor.enum{font-size:13px;letter-spacing:.06em;color:var(--celeste);text-shadow:0 0 8px rgba(117,170,219,.35)}
+.vital canvas{width:70px;height:23px;flex-shrink:0;opacity:.9}
+.vtend{font-size:11px;width:13px;text-align:center;flex-shrink:0}
+.vtend.up{color:var(--verde)}
+.vtend.dn{color:var(--brasa)}
+
+.federal{flex-shrink:0}
+#federalBars{padding:6px 10px 8px}
+.fbar{display:flex;align-items:center;gap:8px;margin:4px 0}
+.fbar .fn{width:76px;font-size:9.5px;letter-spacing:.08em;color:var(--gris);flex-shrink:0}
+.fbar .ftrack{flex:1;height:5px;background:var(--panel-2);border:1px solid var(--linea);position:relative}
+.fbar .ffill{
+  position:absolute;inset:0;right:auto;background:var(--celeste);opacity:.75;
+  box-shadow:inset 0 0 4px rgba(117,170,219,.6);
+  transition:width 1.8s cubic-bezier(.3,.7,.3,1);
+}
+.fbar .fv{width:30px;text-align:right;font-size:10px;color:var(--celeste);font-variant-numeric:tabular-nums}
+
+/* ── MOD 02 · Mapa ────────────────────────────────────────── */
+.mapa-wrap{position:relative;flex:1;min-height:0;cursor:crosshair;background:
+  radial-gradient(420px 420px at 50% 45%, rgba(246,180,14,.04), transparent 70%),
+  var(--panel);
+}
+#mapaCanvas{position:absolute;inset:0;width:100%;height:100%}
+.mapa-caption{
+  position:absolute;left:10px;bottom:8px;right:10px;z-index:3;
+  display:flex;gap:11px;align-items:baseline;font-size:11px;pointer-events:none;
+}
+.mc-hora{color:var(--gold-dim);flex-shrink:0}
+.mc-lugar{color:var(--gold);text-shadow:0 0 8px rgba(246,180,14,.4);letter-spacing:.09em;flex-shrink:0;font-weight:700}
+.mc-desc{color:var(--gris);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapa-hud{
+  position:absolute;top:8px;right:10px;z-index:3;display:flex;gap:12px;
+  font-size:9px;letter-spacing:.1em;color:var(--tenue);pointer-events:none;
+}
+.mapa-hud span{color:var(--gris)}
+
+/* ── MOD 03 · Ondas ───────────────────────────────────────── */
+.ondas{flex:1;display:flex;min-height:0}
+.onda{flex:1;position:relative;min-width:0}
+.onda+.onda{border-left:1px dashed var(--linea)}
+.onda canvas{position:absolute;inset:0;width:100%;height:100%}
+.onda-l{
+  position:absolute;left:8px;top:6px;z-index:2;
+  font-size:9px;letter-spacing:.11em;color:var(--gris);pointer-events:none;
+  text-transform:uppercase;
+}
+.onda-l em{
+  display:block;font-style:normal;font-size:12px;color:var(--celeste);
+  text-shadow:0 0 6px rgba(117,170,219,.4);font-variant-numeric:tabular-nums;margin-top:2px;
+}
+
+/* ── MOD 04 · Alertas ─────────────────────────────────────── */
+.alertas{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.alertas::-webkit-scrollbar{width:4px}
+.alertas::-webkit-scrollbar-thumb{background:var(--linea-hi)}
+.alerta{
+  border:1px solid var(--linea);background:var(--panel-2);
+  padding:8px 10px 9px;position:relative;flex-shrink:0;
+  animation:entrar .4s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes entrar{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.alerta.chau{transition:.45s;opacity:0;transform:translateX(20px)}
+.al-top{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.al-sev{font-size:9px;letter-spacing:.09em;padding:1px 6px;font-weight:700;flex-shrink:0}
+.al-sev.grave{background:rgba(255,107,53,.15);color:var(--brasa);border:1px solid var(--brasa-dim)}
+.al-sev.ojo{background:rgba(246,180,14,.13);color:var(--gold);border:1px solid var(--gold-dim)}
+.al-sev.dato{background:rgba(117,170,219,.12);color:var(--celeste);border:1px solid #3d5a75}
+.al-titulo{font-family:var(--disp);font-size:12.5px;font-weight:700;color:var(--tinta-hi);letter-spacing:.02em}
+.al-lugar{font-size:9.5px;letter-spacing:.09em;color:var(--gris);margin-bottom:4px}
+.al-cuerpo{font-size:11px;line-height:1.45;color:var(--tinta);opacity:.85}
+.al-acciones{display:flex;gap:6px;margin-top:7px}
+.al-acciones button{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;cursor:pointer;
+  background:none;border:1px solid var(--linea-hi);color:var(--celeste);
+  padding:3px 9px;transition:.15s;
+}
+.al-acciones button:hover{background:var(--celeste);color:#0d1620;box-shadow:0 0 8px rgba(117,170,219,.5)}
+.al-acciones button.manana:hover{background:var(--gris);color:#141210;box-shadow:none}
+.al-sello{
+  font-size:10px;letter-spacing:.11em;color:var(--verde);margin-top:7px;
+  text-shadow:0 0 6px rgba(127,176,105,.4);
+}
+.al-conteo{position:absolute;left:0;bottom:0;height:2px;background:var(--brasa);opacity:.7;transition:width 1s linear}
+.al-vacio{
+  margin:auto;text-align:center;color:var(--tenue);font-size:11px;
+  letter-spacing:.12em;line-height:2;
+}
+
+/* ── MOD 05 · Cotizaciones ────────────────────────────────── */
+.cotiz{flex:1;overflow-y:auto;padding:7px 11px;min-height:0}
+.cotiz::-webkit-scrollbar{width:4px}
+.cotiz::-webkit-scrollbar-thumb{background:var(--linea-hi)}
+.crow{display:flex;align-items:baseline;gap:8px;padding:3.5px 0;border-bottom:1px dotted var(--linea)}
+.crow:last-child{border-bottom:none}
+.crow .cn{
+  flex:1;font-size:10px;letter-spacing:.09em;color:var(--tinta);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.crow .cv{font-size:13px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.crow .cd{width:52px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.crow .cd.up{color:var(--verde)}
+.crow .cd.dn{color:var(--brasa)}
+.brecha{
+  flex-shrink:0;border-top:1px dashed var(--linea);padding:6px 11px;
+  font-size:10px;letter-spacing:.12em;color:var(--gris);text-transform:uppercase;
+}
+.brecha b{color:var(--brasa);font-size:12px;margin-left:6px}
+
+/* ── MOD 06 · Registro ────────────────────────────────────── */
+.registro{
+  flex:1;overflow-y:auto;padding:6px 10px;min-height:0;
+  font-size:11.5px;line-height:1.75;
+}
+.registro::-webkit-scrollbar{width:4px}
+.registro::-webkit-scrollbar-thumb{background:var(--linea-hi)}
+.reg-linea{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reg-linea .rt{color:var(--tenue);margin-right:8px}
+.reg-linea .tag{margin-right:8px;font-weight:700}
+.reg-linea .tag.chk{color:#5a7a94}
+.reg-linea .tag.evt{color:var(--gold)}
+.reg-linea .tag.ojo{color:var(--brasa)}
+.reg-linea .tag.sys{color:var(--gris)}
+.reg-linea .msj{color:var(--tinta)}
+.reg-linea.dim .msj{color:var(--gris)}
+
+/* ── MOD 07 · Grupo del asado ─────────────────────────────── */
+.grupo{
+  flex:1;overflow-y:auto;padding:8px 10px;min-height:0;
+  display:flex;flex-direction:column;gap:6px;
+}
+.grupo::-webkit-scrollbar{width:4px}
+.grupo::-webkit-scrollbar-thumb{background:var(--linea-hi)}
+.msg{
+  max-width:88%;padding:5px 9px 6px;position:relative;
+  background:var(--panel-2);border:1px solid var(--linea);
+  border-radius:2px 8px 8px 8px;
+  animation:msgIn .3s cubic-bezier(.2,.8,.3,1);
+  flex-shrink:0;
+}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg .quien{font-size:9.5px;font-weight:700;letter-spacing:.05em;margin-bottom:1px}
+.msg .texto{font-size:11.5px;line-height:1.4;color:var(--tinta)}
+.msg .texto .audio{color:var(--celeste);font-style:italic}
+.msg .hora-msg{font-size:8px;color:var(--tenue);text-align:right;margin-top:2px}
+.grupo-pie{
+  flex-shrink:0;border-top:1px dashed var(--linea);padding:6px 10px;
+  font-size:10px;color:var(--gris);font-style:italic;min-height:26px;
+}
+.escribiendo::after{
+  content:"";display:inline-block;width:4px;
+  animation:puntitos 1.2s steps(4) infinite;
+}
+@keyframes puntitos{
+  0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}
+}
+
+/* ── Responsive (la patria se apila) ──────────────────────── */
+@media (max-width:1120px){
+  body{overflow:auto}
+  .consola{
+    height:auto;grid-template-columns:1fr;
+    grid-template-rows:auto;
+    grid-template-areas:"cab" "mapa" "vit" "ondas" "alert" "cotiz" "registro" "grupo";
+  }
+  .cabecera{flex-wrap:wrap;height:auto;padding:10px 14px;gap:12px}
+  .luces{margin-left:0}
+  #mapaPanel{height:520px}
+  #vitalesPanel{height:430px}
+  #ondasPanel{height:150px}
+  #alertasPanel{height:320px}
+  #cotizPanel{height:230px}
+  #registroPanel{height:240px}
+  #grupoPanel{height:300px}
+}

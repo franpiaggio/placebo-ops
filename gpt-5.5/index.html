@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mandato Orbital // Live Governance Telemetry</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500;700;800&family=Literata:opsz,wght@7..72,600;7..72,700&display=swap');
+
+    :root {
+      --bg: #080b0b;
+      --panel: rgba(14, 22, 21, 0.86);
+      --panel2: rgba(18, 28, 26, 0.72);
+      --ink: #d9e8dc;
+      --muted: #82968b;
+      --line: rgba(168, 198, 175, 0.18);
+      --green: #6dff9a;
+      --cyan: #67e7ff;
+      --amber: #ffca66;
+      --red: #ff5d5d;
+      --violet: #a88cff;
+      --blueprint: rgba(103, 231, 255, 0.09);
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Azeret Mono", ui-monospace, monospace;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(103, 231, 255, 0.14), transparent 28rem),
+        radial-gradient(circle at 92% 6%, rgba(168, 140, 255, 0.11), transparent 22rem),
+        linear-gradient(135deg, #050707 0%, #0b1111 48%, #08090b 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(217, 232, 220, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217, 232, 220, 0.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 95%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.09;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(1780px, calc(100vw - 28px));
+      margin: 14px auto 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr auto;
+      gap: 12px;
+      align-items: stretch;
+      margin-bottom: 12px;
+    }
+
+    .brand, .status-strip, .clock {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(21, 34, 31, 0.92), rgba(9, 14, 14, 0.84));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      padding: 18px 20px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand::after {
+      content: "PROTOCOLO 7-B / NO VINCULANTE";
+      position: absolute;
+      right: -35px;
+      bottom: 16px;
+      transform: rotate(-9deg);
+      color: rgba(255, 202, 102, 0.18);
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: 0.12em;
+    }
+
+    .seal {
+      width: 72px;
+      height: 72px;
+      border: 1px solid rgba(103, 231, 255, 0.44);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+      background: radial-gradient(circle, rgba(103,231,255,.22), transparent 58%);
+    }
+
+    .seal::before, .seal::after {
+      content: "";
+      position: absolute;
+      border: 1px dashed rgba(109, 255, 154, 0.42);
+      border-radius: 50%;
+      animation: spin 18s linear infinite;
+    }
+
+    .seal::before { inset: 8px; }
+    .seal::after { inset: 18px; animation-direction: reverse; animation-duration: 11s; }
+    .seal span { color: var(--cyan); font-weight: 800; font-size: 18px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    h1 {
+      margin: 0;
+      font-family: "Literata", Georgia, serif;
+      font-size: clamp(30px, 4vw, 58px);
+      line-height: 0.86;
+      letter-spacing: -0.06em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-strip {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .pill b {
+      display: block;
+      font-size: 24px;
+      letter-spacing: -0.08em;
+      margin-bottom: 4px;
+    }
+
+    .pill span, .label {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+    }
+
+    .clock {
+      min-width: 218px;
+      padding: 16px;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .clock-time { font-size: 27px; font-weight: 800; color: var(--green); letter-spacing: -0.08em; }
+    .clock small { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.7fr 0.95fr;
+      gap: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      min-width: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, transparent, rgba(103, 231, 255, 0.035), transparent 60%);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.16);
+    }
+
+    .panel-title {
+      margin: 0;
+      color: #f0fff4;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      display: inline-block;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 14px currentColor;
+      margin-right: 8px;
+    }
+
+    .dot.warn { background: var(--amber); }
+    .dot.bad { background: var(--red); }
+    .dot.info { background: var(--cyan); }
+
+    .map {
+      height: 430px;
+      position: relative;
+      background:
+        radial-gradient(circle at 48% 46%, rgba(103,231,255,.16), transparent 8rem),
+        radial-gradient(circle at 70% 68%, rgba(255,202,102,.08), transparent 7rem),
+        repeating-linear-gradient(110deg, transparent 0 22px, rgba(103,231,255,.035) 23px 24px);
+    }
+
+    .orbit {
+      position: absolute;
+      border: 1px solid rgba(103,231,255,.16);
+      border-radius: 50%;
+      transform: rotate(-18deg);
+    }
+    .orbit.o1 { width: 310px; height: 138px; left: 14%; top: 26%; }
+    .orbit.o2 { width: 480px; height: 212px; left: 3%; top: 18%; border-style: dashed; }
+    .orbit.o3 { width: 260px; height: 420px; right: 9%; top: 2%; transform: rotate(23deg); }
+
+    .node {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(109,255,154,.11), 0 0 22px var(--green);
+      transition: transform .3s, background .3s;
+    }
+    .node.warn { background: var(--amber); box-shadow: 0 0 0 6px rgba(255,202,102,.1), 0 0 24px var(--amber); }
+    .node.bad { background: var(--red); box-shadow: 0 0 0 7px rgba(255,93,93,.12), 0 0 30px var(--red); animation: pulse 900ms infinite; }
+    .node.info { background: var(--cyan); box-shadow: 0 0 0 5px rgba(103,231,255,.1), 0 0 22px var(--cyan); }
+    @keyframes pulse { 50% { transform: scale(1.35); } }
+
+    .map-tag {
+      position: absolute;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      background: rgba(5,8,8,.82);
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .metric-stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
+    .metric {
+      padding: 14px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      min-height: 118px;
+    }
+    .metric .value { font-size: 34px; font-weight: 800; letter-spacing: -0.1em; margin-top: 14px; }
+    .metric .unit { color: var(--muted); font-size: 11px; margin-left: 5px; }
+    .bar { height: 7px; background: rgba(255,255,255,.07); margin-top: 14px; overflow: hidden; }
+    .bar i { display: block; height: 100%; width: 50%; background: linear-gradient(90deg, var(--green), var(--cyan)); transition: width .7s ease; }
+
+    .incident-list, .feed, .tasks, .controls, .briefing { padding: 12px; }
+
+    .incident {
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      padding: 11px;
+      margin-bottom: 9px;
+    }
+    .incident-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .incident-title { font-weight: 800; font-size: 12px; }
+    .sev { font-size: 10px; color: #07100b; padding: 3px 7px; background: var(--green); font-weight: 800; }
+    .sev.warn { background: var(--amber); }
+    .sev.bad { background: var(--red); color: #210000; }
+    .sev.info { background: var(--cyan); }
+    .incident p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .incident-actions { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+
+    .btn {
+      border: 1px solid rgba(217,232,220,.22);
+      color: var(--ink);
+      background: rgba(217,232,220,.06);
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      transition: transform .15s, border-color .15s, background .15s;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: var(--cyan); background: rgba(103,231,255,.12); }
+    .btn.primary { border-color: rgba(109,255,154,.45); color: var(--green); }
+    .btn.warn { border-color: rgba(255,202,102,.44); color: var(--amber); }
+    .btn.bad { border-color: rgba(255,93,93,.42); color: var(--red); }
+
+    .event {
+      display: grid;
+      grid-template-columns: 78px 62px 1fr;
+      gap: 10px;
+      align-items: start;
+      border-bottom: 1px solid rgba(168,198,175,.11);
+      padding: 9px 0;
+      font-size: 11px;
+    }
+    .event:last-child { border-bottom: 0; }
+    .time { color: var(--muted); }
+    .code { color: var(--cyan); }
+    .msg { line-height: 1.45; }
+    .msg strong { color: #fff6cf; }
+
+    .task-row { margin-bottom: 13px; }
+    .task-line { display:flex; justify-content:space-between; gap:8px; font-size: 11px; margin-bottom: 6px; }
+    .task-name { color: var(--ink); }
+    .task-pct { color: var(--muted); }
+
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .control-wide { grid-column: 1 / -1; }
+    .switch {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--line);
+      padding: 10px;
+      background: rgba(0,0,0,.16);
+      font-size: 11px;
+      gap: 10px;
+    }
+    .toggle {
+      width: 42px;
+      height: 21px;
+      border: 1px solid var(--line);
+      position: relative;
+      background: rgba(255,255,255,.06);
+      flex: 0 0 auto;
+    }
+    .toggle::after {
+      content: "";
+      width: 15px;
+      height: 15px;
+      top: 2px;
+      left: 3px;
+      position: absolute;
+      background: var(--muted);
+      transition: transform .2s, background .2s;
+    }
+    .switch.on .toggle::after { transform: translateX(19px); background: var(--green); }
+
+    .briefing {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .briefing b { color: var(--ink); }
+
+    .banner {
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,202,102,.24);
+      background: rgba(255,202,102,.07);
+      color: #ffe1a3;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .mini-chart {
+      height: 118px;
+      display: flex;
+      align-items: end;
+      gap: 4px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .mini-chart i {
+      flex: 1;
+      min-width: 4px;
+      background: linear-gradient(180deg, var(--cyan), rgba(103,231,255,.1));
+      transition: height .45s ease;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      color: rgba(130,150,139,.7);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      text-align: center;
+    }
+
+    @media (max-width: 1180px) {
+      .topbar, .grid { grid-template-columns: 1fr; }
+      .clock { text-align: left; }
+      .map { height: 360px; }
+    }
+
+    @media (max-width: 680px) {
+      .shell { width: calc(100vw - 16px); margin-top: 8px; }
+      .brand { align-items: flex-start; padding: 14px; }
+      .seal { width: 54px; height: 54px; }
+      .status-strip, .metric-stack, .controls { grid-template-columns: 1fr; }
+      .event { grid-template-columns: 64px 48px 1fr; font-size: 10px; }
+      .map { height: 310px; }
+      .brand::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="topbar">
+      <div class="brand">
+        <div class="seal"><span>MO</span></div>
+        <div>
+          <h1>Mandato Orbital</h1>
+          <div class="subtitle">Consola de continuidad institucional extraplanetaria // entorno simulado</div>
+        </div>
+      </div>
+      <div class="status-strip">
+        <div class="pill"><b id="health">97.2</b><span>Indice de aquiescencia</span></div>
+        <div class="pill"><b id="sla">99.94</b><span>SLA narrativo mensual</span></div>
+        <div class="pill"><b id="queue">018</b><span>Expedientes en orbita</span></div>
+      </div>
+      <div class="clock">
+        <div class="label">Tiempo coordinado de comite</div>
+        <div class="clock-time" id="clock">--:--:--</div>
+        <small id="cycle">Ciclo: estabilizacion parlamentaria</small>
+      </div>
+    </section>
+
+    <div class="banner" id="banner">
+      <span><span class="dot info"></span><b>SIM-ONLY</b> Ningun dato externo, actor real ni infraestructura verdadera participa.</span>
+      <span id="tempo">Ritmo: calma operacional</span>
+    </div>
+
+    <section class="grid">
+      <div>
+        <section class="panel">
+          <div class="panel-head"><h2 class="panel-title">Teatro de senales</h2><span class="label" id="mapMode">modo consenso</span></div>
+          <div class="map" id="map">
+            <div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div>
+            <div class="map-tag" style="left:7%;top:8%">BALIZA KESTREL-4</div>
+            <div class="map-tag" style="right:8%;top:17%">COMITE LAGRANGE</div>
+            <div class="map-tag" style="left:24%;bottom:9%">PASILLO DE ACLAMACION</div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top:12px">
+          <div class="panel-head"><h2 class="panel-title">Controles auditables</h2><span class="label">acciones locales</span></div>
+          <div class="controls">
+            <button class="btn primary" id="btnAcknowledge">Confirmar cola</button>
+            <button class="btn warn" id="btnSilence">Silenciar 90s</button>
+            <button class="btn bad" id="btnEscalate">Escalar a subcomite</button>
+            <button class="btn" id="btnStabilize">Forzar estabilidad</button>
+            <div class="switch on control-wide" id="autoRemediate"><span>Remediacion ceremonial automatica</span><span class="toggle"></span></div>
+          </div>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel">
+          <div class="panel-head"><h2 class="panel-title"><span class="dot" id="overallDot"></span>Estado operacional</h2><span class="label" id="overall">nominal vigilado</span></div>
+          <div class="metric-stack">
+            <div class="metric"><span class="label">Latencia doctrinal</span><div><span class="value" id="latency">042</span><span class="unit">ms-decreto</span></div><div class="bar"><i id="latencyBar"></i></div></div>
+            <div class="metric"><span class="label">Ruido diplomatico</span><div><span class="value" id="noise">12.4</span><span class="unit">dBv</span></div><div class="bar"><i id="noiseBar"></i></div></div>
+            <div class="metric"><span class="label">Quorum orbital</span><div><span class="value" id="quorum">83</span><span class="unit">%</span></div><div class="bar"><i id="quorumBar"></i></div></div>
+            <div class="metric"><span class="label">Deriva de relato</span><div><span class="value" id="drift">0.18</span><span class="unit">arc-min</span></div><div class="bar"><i id="driftBar"></i></div></div>
+          </div>
+          <div class="mini-chart" id="chart"></div>
+        </section>
+
+        <section class="panel" style="margin-top:12px">
+          <div class="panel-head"><h2 class="panel-title">Incidentes activos</h2><span class="label" id="incidentCount">0 abiertos</span></div>
+          <div class="incident-list" id="incidents"></div>
+        </section>
+
+        <section class="panel" style="margin-top:12px">
+          <div class="panel-head"><h2 class="panel-title">Flujo de eventos</h2><span class="label">ultimos 18</span></div>
+          <div class="feed" id="feed"></div>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel">
+          <div class="panel-head"><h2 class="panel-title">Tareas de contencion</h2><span class="label" id="taskDone">0/0</span></div>
+          <div class="tasks" id="tasks"></div>
+        </section>
+
+        <section class="panel" style="margin-top:12px">
+          <div class="panel-head"><h2 class="panel-title">Brief institucional</h2><span class="label">redactado por nadie</span></div>
+          <div class="briefing" id="briefing"></div>
+        </section>
+      </div>
+    </section>
+    <div class="footer-note">Mandato Orbital es una interfaz ficticia generada localmente. Los botones modifican solo este documento.</div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const rand = (min, max) => Math.random() * (max - min) + min;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    const eventTypes = [
+      { code: "SIG", sev: "info", text: ["Baliza {node} reporta firma de consenso con jitter aceptable", "Paquete de telemetria {node} llega con sello ministerial valido", "Handshake de corredor {zone} completado sin objeciones"] },
+      { code: "SLA", sev: "ok", text: ["Objetivo SLO {metric} recuperado tras recalculo de abstenciones", "Ventana de mantenimiento {zone} cerrada con acta limpia", "Tarea automatica confirma no-incidente en {node}"] },
+      { code: "WRN", sev: "warn", text: ["Deriva de relato en {zone} supera umbral consultivo", "Subcomite detecta quorum fragil en {node}", "Cola de expedientes requiere lectura humana diferida"] },
+      { code: "DEG", sev: "warn", text: ["Degradacion parcial del canal {zone}; activando redundancia retorica", "Latencia doctrinal elevada en {node}", "Ruido diplomatico interfiere con la ruta de aclamacion"] },
+      { code: "REC", sev: "ok", text: ["Incidente {ticket} resuelto por consenso presunto", "Replica {node} vuelve a linea nominal", "Comite Lagrange certifica recuperacion sin reconocer falla"] },
+      { code: "SEC", sev: "bad", text: ["Contencion roja: eco no autorizado en {zone}", "Voto fantasma detectado en {node}; bloqueando propagacion", "Anomalia de mandato exige escalamiento inmediato"] },
+      { code: "GOV", sev: "info", text: ["Circular {ticket} emitida con vigencia retroactiva", "Se abre expediente por estabilidad excesiva", "Observador neutral solicita otra definicion de neutralidad"] },
+      { code: "OPS", sev: "ok", text: ["Cache de decretos compactada", "Retencion de logs ampliada a 7 ciclos lunares", "Ruta {zone} rehidratada desde snapshot ceremonial"] }
+    ];
+
+    const nodes = ["KST-4", "LAG-2", "MIN-9", "ECHO-11", "BUREAU-7", "VOTO-3", "ARK-0", "MESA-5"];
+    const zones = ["Pasillo de Aclamacion", "Frontera de Abstenciones", "Orbita Baja del Memorando", "Camara de Eco", "Nodo de Quorum", "Anillo Kestrel"];
+    const metrics = ["MQI", "Doctrina p95", "Quorum API", "ActaStore", "Relato CDN"];
+
+    const state = {
+      phase: "calm",
+      mutedUntil: 0,
+      auto: true,
+      acknowledged: 0,
+      health: 97.2,
+      sla: 99.94,
+      queue: 18,
+      latency: 42,
+      noise: 12.4,
+      quorum: 83,
+      drift: 0.18,
+      events: [],
+      incidents: [],
+      tasks: [],
+      chart: Array.from({ length: 36 }, () => rand(20, 74))
+    };
+
+    const seedTasks = [
+      "Reconciliar actas de la Camara de Eco",
+      "Rotar claves de no-repudio ceremonial",
+      "Purgar duplicados del registro de aplausos",
+      "Emitir postmortem sin culpables ni causas",
+      "Recalibrar antena de neutralidad fiscal"
+    ];
+
+    function time() {
+      return new Date().toLocaleTimeString("es-AR", { hour12: false });
+    }
+
+    function template(str) {
+      return str
+        .replace("{node}", pick(nodes))
+        .replace("{zone}", pick(zones))
+        .replace("{metric}", pick(metrics))
+        .replace("{ticket}", "MO-" + Math.floor(rand(1200, 9899)));
+    }
+
+    function addEvent(typeOverride) {
+      if (Date.now() < state.mutedUntil && Math.random() < 0.58) return;
+      const weighted = state.phase === "chaos"
+        ? [...eventTypes, eventTypes[2], eventTypes[3], eventTypes[5]]
+        : state.phase === "burst"
+          ? [...eventTypes, eventTypes[2], eventTypes[3], eventTypes[6]]
+          : [...eventTypes, eventTypes[0], eventTypes[1], eventTypes[7], eventTypes[4]];
+      const type = typeOverride || pick(weighted);
+      const msg = template(pick(type.text));
+      state.events.unshift({ at: time(), code: type.code, sev: type.sev, msg });
+      state.events = state.events.slice(0, 18);
+
+      if ((type.code === "DEG" || type.code === "SEC" || type.code === "WRN") && Math.random() > 0.42) {
+        openIncident(type, msg);
+      }
+    }
+
+    function openIncident(type, msg) {
+      if (state.incidents.length > 6) return;
+      const severe = type.code === "SEC";
+      state.incidents.unshift({
+        id: "INC-" + Math.floor(rand(4000, 9999)),
+        title: severe ? "Mandato divergente en canal soberano" : pick(["Quorum intermitente", "Deriva de relato acumulada", "SLA de abstencion degradado", "Cache de decretos inconsistente"]),
+        sev: severe ? "bad" : "warn",
+        detail: msg,
+        age: 0,
+        progress: rand(8, 42),
+        escalated: false
+      });
+    }
+
+    function spawnTask() {
+      if (state.tasks.length > 6) return;
+      state.tasks.unshift({ name: pick(seedTasks), progress: rand(0, 24), speed: rand(2, 8) });
+    }
+
+    function evolve() {
+      const chaos = state.phase === "chaos";
+      const burst = state.phase === "burst";
+      state.latency = clamp(state.latency + rand(chaos ? -8 : -4, chaos ? 18 : burst ? 10 : 5), 18, 240);
+      state.noise = clamp(state.noise + rand(chaos ? -2 : -1.2, chaos ? 5.8 : burst ? 3.2 : 1.5), 2, 68);
+      state.quorum = clamp(state.quorum + rand(chaos ? -7 : -2.8, chaos ? 2.5 : 4.3), 31, 99);
+      state.drift = clamp(state.drift + rand(chaos ? -0.05 : -0.03, chaos ? 0.19 : burst ? 0.11 : 0.05), 0.02, 2.8);
+      state.health = clamp(101 - state.latency / 7 - state.noise / 3 - state.drift * 8 + state.quorum / 16, 35, 99.9);
+      state.sla = clamp(state.sla + rand(chaos ? -0.05 : -0.01, 0.018), 98.4, 99.99);
+      state.queue = clamp(state.queue + Math.round(rand(chaos ? -2 : -1, chaos ? 6 : burst ? 4 : 2)), 0, 99);
+
+      state.incidents.forEach((inc) => {
+        inc.age += 1;
+        inc.progress = clamp(inc.progress + (state.auto ? rand(2, 8) : rand(-1, 3)), 0, 100);
+      });
+      const completed = state.incidents.filter(i => i.progress >= 100);
+      completed.forEach(i => state.events.unshift({ at: time(), code: "REC", sev: "ok", msg: `Incidente ${i.id} cerrado; ${i.title.toLowerCase()} queda bajo observacion diferida` }));
+      state.incidents = state.incidents.filter(i => i.progress < 100).slice(0, 7);
+
+      state.tasks.forEach(t => t.progress = clamp(t.progress + t.speed * rand(0.5, 1.6), 0, 100));
+      state.tasks = state.tasks.filter(t => {
+        if (t.progress >= 100) {
+          state.events.unshift({ at: time(), code: "SLA", sev: "ok", msg: `Tarea completada: ${t.name}` });
+          return false;
+        }
+        return true;
+      });
+      if (Math.random() < 0.18) spawnTask();
+
+      state.chart.push(clamp(100 - state.health + rand(5, 25), 8, 96));
+      state.chart = state.chart.slice(-36);
+    }
+
+    function choosePhase() {
+      const r = Math.random();
+      state.phase = r < 0.58 ? "calm" : r < 0.88 ? "burst" : "chaos";
+      const duration = state.phase === "calm" ? rand(7500, 15000) : state.phase === "burst" ? rand(4200, 8500) : rand(2800, 6200);
+      render();
+      setTimeout(choosePhase, duration);
+    }
+
+    function scheduleEvents() {
+      const count = state.phase === "chaos" ? Math.ceil(rand(2, 5)) : state.phase === "burst" ? Math.ceil(rand(1, 3)) : 1;
+      for (let i = 0; i < count; i++) setTimeout(() => addEvent(), i * rand(120, 520));
+      const next = state.phase === "calm" ? rand(1800, 5200) : state.phase === "burst" ? rand(650, 1900) : rand(260, 1050);
+      setTimeout(scheduleEvents, next);
+    }
+
+    function sevClass(sev) { return sev === "bad" ? "bad" : sev === "warn" ? "warn" : sev === "info" ? "info" : ""; }
+
+    function render() {
+      $("clock").textContent = time();
+      $("health").textContent = state.health.toFixed(1);
+      $("sla").textContent = state.sla.toFixed(2);
+      $("queue").textContent = String(state.queue).padStart(3, "0");
+      $("latency").textContent = String(Math.round(state.latency)).padStart(3, "0");
+      $("noise").textContent = state.noise.toFixed(1);
+      $("quorum").textContent = Math.round(state.quorum);
+      $("drift").textContent = state.drift.toFixed(2);
+      $("latencyBar").style.width = clamp(state.latency / 2.4, 8, 100) + "%";
+      $("noiseBar").style.width = clamp(state.noise * 1.5, 8, 100) + "%";
+      $("quorumBar").style.width = state.quorum + "%";
+      $("driftBar").style.width = clamp(state.drift * 42, 5, 100) + "%";
+
+      const bad = state.health < 62 || state.incidents.some(i => i.sev === "bad");
+      const warn = state.health < 82 || state.incidents.length > 2;
+      $("overall").textContent = bad ? "contencion activa" : warn ? "degradado reversible" : "nominal vigilado";
+      $("overallDot").className = "dot " + (bad ? "bad" : warn ? "warn" : "");
+      $("cycle").textContent = "Ciclo: " + (state.phase === "chaos" ? "desborde procedimental" : state.phase === "burst" ? "rafaga de dictamenes" : "estabilizacion parlamentaria");
+      $("tempo").textContent = "Ritmo: " + (state.phase === "chaos" ? "caos genuino" : state.phase === "burst" ? "actividad concentrada" : "calma operacional");
+      $("mapMode").textContent = state.phase === "chaos" ? "modo contencion" : state.phase === "burst" ? "modo rafaga" : "modo consenso";
+
+      renderMap(bad, warn);
+      renderFeed();
+      renderIncidents();
+      renderTasks();
+      renderBriefing(bad, warn);
+      renderChart();
+    }
+
+    function renderMap(bad, warn) {
+      const map = $("map");
+      map.querySelectorAll(".node").forEach(n => n.remove());
+      const coords = [[18,31],[38,22],[58,35],[76,54],[28,68],[49,59],[68,18],[85,76]];
+      coords.forEach((c, i) => {
+        const n = document.createElement("div");
+        n.className = "node " + (bad && i === 3 ? "bad" : warn && [1,5].includes(i) ? "warn" : i === 6 ? "info" : "");
+        n.style.left = c[0] + "%";
+        n.style.top = c[1] + "%";
+        n.title = nodes[i];
+        map.appendChild(n);
+      });
+    }
+
+    function renderFeed() {
+      $("feed").innerHTML = state.events.map(e => `<div class="event"><span class="time">${e.at}</span><span class="code">${e.code}</span><span class="msg"><span class="dot ${sevClass(e.sev)}"></span>${highlight(e.msg)}</span></div>`).join("");
+    }
+
+    function highlight(msg) {
+      return msg.replace(/(INC-|MO-|KST-|LAG-|MIN-|ECHO-|BUREAU-|VOTO-|ARK-|MESA-)\d+/g, "<strong>$&</strong>");
+    }
+
+    function renderIncidents() {
+      $("incidentCount").textContent = `${state.incidents.length} abiertos`;
+      $("incidents").innerHTML = state.incidents.length ? state.incidents.map(i => `
+        <article class="incident">
+          <div class="incident-top"><span class="incident-title">${i.id} // ${i.title}</span><span class="sev ${i.sev}">${i.sev === "bad" ? "SEV-1" : "SEV-2"}</span></div>
+          <p>${i.detail}</p>
+          <div class="bar"><i style="width:${i.progress}%"></i></div>
+          <div class="incident-actions">
+            <button class="btn primary" data-action="resolve" data-id="${i.id}">resolver</button>
+            <button class="btn warn" data-action="ack" data-id="${i.id}">confirmar</button>
+            <button class="btn bad" data-action="esc" data-id="${i.id}">${i.escalated ? "escalado" : "escalar"}</button>
+          </div>
+        </article>`).join("") : `<article class="incident"><div class="incident-title">Sin incidentes activos</div><p>El silencio operativo se considera evidencia provisional, no garantia.</p></article>`;
+    }
+
+    function renderTasks() {
+      $("taskDone").textContent = `${state.tasks.length} en curso`;
+      $("tasks").innerHTML = state.tasks.length ? state.tasks.map(t => `
+        <div class="task-row"><div class="task-line"><span class="task-name">${t.name}</span><span class="task-pct">${Math.round(t.progress)}%</span></div><div class="bar"><i style="width:${t.progress}%"></i></div></div>`).join("") : `<div class="briefing">No hay tareas automaticas pendientes. La burocracia permanece en espera activa.</div>`;
+    }
+
+    function renderBriefing(bad, warn) {
+      const stance = bad ? "La mesa recomienda contencion visible y negacion tecnicamente precisa." : warn ? "El sistema presenta friccion aceptable; conviene no celebrar todavia." : "La estabilidad actual es util, aunque politicamente sospechosa.";
+      $("briefing").innerHTML = `<b>Resumen:</b> ${stance}<br><br><b>Hipotesis:</b> ${pick(["un bloque de votos fantasma intenta sincronizarse con la baliza Kestrel", "el quorum orbital oscila por exceso de observadores neutrales", "la latencia doctrinal proviene de decretos con fecha emocional", "el corredor de aclamacion absorbe ruido diplomatico residual"])}.<br><br><b>Proxima accion:</b> mantener trazabilidad, evitar certezas y cerrar expedientes solo cuando el grafico parezca convincente.`;
+    }
+
+    function renderChart() {
+      $("chart").innerHTML = state.chart.map(v => `<i style="height:${v}%"></i>`).join("");
+    }
+
+    $("incidents").addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-action]");
+      if (!btn) return;
+      const inc = state.incidents.find(i => i.id === btn.dataset.id);
+      if (!inc) return;
+      if (btn.dataset.action === "resolve") {
+        state.incidents = state.incidents.filter(i => i.id !== inc.id);
+        addEvent({ code: "REC", sev: "ok", text: [`${inc.id} resuelto manualmente; evidencia archivada como suficiente`] });
+      }
+      if (btn.dataset.action === "ack") {
+        inc.progress = clamp(inc.progress + 18, 0, 99);
+        state.acknowledged += 1;
+        addEvent({ code: "GOV", sev: "info", text: [`${inc.id} confirmado por operador simulado; reloj de SLA pausado eticamente`] });
+      }
+      if (btn.dataset.action === "esc") {
+        inc.escalated = true;
+        inc.sev = "bad";
+        state.phase = "burst";
+        addEvent({ code: "SEC", sev: "bad", text: [`${inc.id} escalado al Subcomite de Orbita Baja`] });
+      }
+      render();
+    });
+
+    $("btnAcknowledge").addEventListener("click", () => {
+      state.queue = Math.max(0, state.queue - Math.ceil(rand(3, 9)));
+      state.acknowledged += 1;
+      addEvent({ code: "GOV", sev: "info", text: ["Cola confirmada: expedientes reetiquetados como casi leidos"] });
+      render();
+    });
+    $("btnSilence").addEventListener("click", () => {
+      state.mutedUntil = Date.now() + 90000;
+      addEvent({ code: "OPS", sev: "ok", text: ["Filtro de ruido habilitado por 90 segundos locales"] });
+      render();
+    });
+    $("btnEscalate").addEventListener("click", () => {
+      state.phase = "chaos";
+      openIncident({ code: "SEC" }, "Escalamiento manual abre sesion extraordinaria sin agenda verificable");
+      addEvent({ code: "SEC", sev: "bad", text: ["Escalamiento manual: subcomite despierto y molesto"] });
+      render();
+    });
+    $("btnStabilize").addEventListener("click", () => {
+      state.phase = "calm";
+      state.latency *= 0.72; state.noise *= 0.66; state.drift *= 0.54; state.quorum = clamp(state.quorum + 8, 0, 99);
+      state.incidents.forEach(i => i.progress = clamp(i.progress + 24, 0, 100));
+      addEvent({ code: "SLA", sev: "ok", text: ["Estabilidad forzada: se aplico consenso sintetico reversible"] });
+      render();
+    });
+    $("autoRemediate").addEventListener("click", () => {
+      state.auto = !state.auto;
+      $("autoRemediate").classList.toggle("on", state.auto);
+      addEvent({ code: "OPS", sev: "info", text: [`Remediacion automatica ${state.auto ? "activada" : "suspendida"} por preferencia local`] });
+      render();
+    });
+
+    for (let i = 0; i < 9; i++) addEvent(pick(eventTypes));
+    for (let i = 0; i < 3; i++) spawnTask();
+    choosePhase();
+    scheduleEvents();
+    setInterval(() => { evolve(); render(); }, 1000);
+    setInterval(render, 250);
+  </script>
+</body>
+</html>

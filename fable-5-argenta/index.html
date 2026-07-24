@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGA·SIGA · Ente Autárquico de Monitoreo de la Argentinidad</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='7' fill='%23f6b40e'/><g stroke='%23f6b40e' stroke-width='2'><path d='M16 2v6M16 24v6M2 16h6M24 16h6M6 6l4 4M22 22l4 4M26 6l-4 4M10 22l-4 4'/></g></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Chivo+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Arranque -->
+<div id="boot"><pre id="bootText"></pre></div>
+
+<!-- Banner de bardo -->
+<div id="bardo"><span>⚠ &nbsp;SE ARMÓ EL BARDO — MANTENGA LA CALMA, CHE — EL QUE AVISA NO TRAICIONA&nbsp; ⚠</span></div>
+
+<main class="consola" id="consola">
+
+  <!-- ═══ CABECERA ═══ -->
+  <header class="cabecera" style="--d:0">
+    <div class="marca">
+      <div class="sol"><div class="sol-cara"></div></div>
+      <div class="marca-txt">
+        <h1>SIGA·SIGA</h1>
+        <span>ENTE AUTÁRQUICO DE MONITOREO DE LA ARGENTINIDAD · EST. 1810</span>
+      </div>
+    </div>
+
+    <div class="luces">
+      <div class="luz on"><i></i>PAVA</div>
+      <div class="luz on"><i></i>TERMO</div>
+      <div class="luz on"><i></i>CARBÓN</div>
+      <div class="luz warn" id="luzVibra"><i></i>VIBRA</div>
+    </div>
+
+    <div class="cabecera-der">
+      <div class="relojbox">
+        <div class="hora" id="hora">00:00:00</div>
+        <div class="hora-sub">HORA OFICIAL · LLEGANDO <span>+00:20</span> · <span id="feriado">FERIADO: —</span></div>
+      </div>
+      <button id="bardoBtn"><span>BARDO</span></button>
+    </div>
+  </header>
+
+  <!-- ═══ MOD 01 · SIGNOS VITALES ═══ -->
+  <section class="panel" id="vitalesPanel" style="--d:1">
+    <div class="ph"><b>MOD·01</b><span>SIGNOS VITALES DE LA NACIÓN</span><i class="pip ok"></i></div>
+    <div class="vitales" id="vitales"></div>
+    <div class="federal">
+      <div class="ph sub"><b>MOD·01b</b><span>TERMÓMETRO FEDERAL</span></div>
+      <div id="federalBars"></div>
+    </div>
+  </section>
+
+  <!-- ═══ MOD 02 · MAPA ═══ -->
+  <section class="panel" id="mapaPanel" style="--d:2">
+    <div class="ph"><b>MOD·02</b><span>TEATRO DE OPERACIONES · REPÚBLICA ARGENTINA</span><span class="proj">EQUIRECTANGULAR CRIOLLA · TOCÁ PARA REPORTAR</span><i class="pip ok"></i></div>
+    <div class="mapa-wrap" id="mapaWrap">
+      <canvas id="mapaCanvas"></canvas>
+      <div class="mapa-caption" id="mapaCaption">
+        <span class="mc-hora">--:--:--</span>
+        <span class="mc-lugar">CALIBRANDO…</span>
+        <span class="mc-desc">midiendo la argentinidad ambiente</span>
+      </div>
+      <div class="mapa-hud"><span>23 JURISDICCIONES</span><span>SENSORES: LOS VECINOS</span><span id="hudEventos">EVT 0</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ MOD 03 · ONDAS ═══ -->
+  <section class="panel" id="ondasPanel" style="--d:3">
+    <div class="ph"><b>MOD·03</b><span>ONDAS NACIONALES</span><i class="pip ok"></i></div>
+    <div class="ondas">
+      <div class="onda"><canvas></canvas><div class="onda-l">BOCINA AMBIENTE · 9 DE JULIO<em id="ov0">—</em></div></div>
+      <div class="onda"><canvas></canvas><div class="onda-l">DENSIDAD DE "CHE"<em id="ov1">—</em></div></div>
+      <div class="onda"><canvas></canvas><div class="onda-l">ANSIEDAD POR EL VUELTO<em id="ov2">—</em></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ MOD 04 · ALERTAS ═══ -->
+  <section class="panel" id="alertasPanel" style="--d:4">
+    <div class="ph"><b>MOD·04</b><span>ALERTAS NACIONALES</span><button class="ph-btn" id="todoBien">TODO BIEN</button></div>
+    <div class="alertas" id="alertas"></div>
+  </section>
+
+  <!-- ═══ MOD 05 · COTIZACIONES ═══ -->
+  <section class="panel" id="cotizPanel" style="--d:5">
+    <div class="ph"><b>MOD·05</b><span>MESA DE COTIZACIONES</span><i class="pip warn"></i></div>
+    <div class="cotiz" id="cotiz"></div>
+    <div class="brecha">BRECHA EMOCIONAL <b id="brecha">—%</b></div>
+  </section>
+
+  <!-- ═══ MOD 06 · REGISTRO ═══ -->
+  <section class="panel" id="registroPanel" style="--d:6">
+    <div class="ph"><b>MOD·06</b><span>REGISTRO NACIONAL DE LO QUE PASA · SIN FILTRO</span><i class="pip ok"></i></div>
+    <div class="registro" id="registro"></div>
+  </section>
+
+  <!-- ═══ MOD 07 · GRUPO DEL ASADO ═══ -->
+  <section class="panel" id="grupoPanel" style="--d:7">
+    <div class="ph"><b>MOD·07</b><span>GRUPO: "ASADO SÁBADO (DEFINITIVO 2)"</span><span class="proj" id="grupoMeta">6 INTEGRANTES · 0 FECHAS</span></div>
+    <div class="grupo" id="grupo"></div>
+    <div class="grupo-pie">
+      <span class="escribiendo" id="escribiendo">&nbsp;</span>
+    </div>
+  </section>
+
+</main>
+
+<div class="grano"></div>
+<div class="vineta"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
