@@ -1,0 +1,379 @@
+/* ═══════════════════════════════════════════════════════════════
+   ARGUS · Planetary Oversight Terminal
+   Dual-phosphor CRT console. Amber primary, green secondary.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root{
+  --bg:        #070806;
+  --panel:     #0b0d09;
+  --panel-2:   #0e110b;
+  --line:      #232819;
+  --line-hi:   #39402a;
+  --amber:     #ffb454;
+  --amber-hi:  #ffd18f;
+  --amber-dim: #8a6a3a;
+  --green:     #8fce7a;
+  --green-dim: #4c6b42;
+  --red:       #ff5a36;
+  --dim:       #6b7260;
+  --faint:     #3d4236;
+  --glow-a:    0 0 7px rgba(255,180,84,.5);
+  --glow-g:    0 0 6px rgba(143,206,122,.4);
+  --mono:      "IBM Plex Mono", ui-monospace, monospace;
+  --disp:      "Michroma", var(--mono);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--green);
+  font-family:var(--mono);
+  font-size:12px;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── CRT overlays ─────────────────────────────────────────── */
+.crt{
+  position:fixed;inset:0;z-index:90;pointer-events:none;
+  background:repeating-linear-gradient(0deg,
+    rgba(0,0,0,.20) 0 1px, transparent 1px 3px);
+  animation:flicker 4s infinite steps(60);
+}
+.vignette{
+  position:fixed;inset:0;z-index:91;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 48%, transparent 52%, rgba(0,0,0,.55) 100%);
+}
+@keyframes flicker{
+  0%,100%{opacity:1} 31%{opacity:.92} 32%{opacity:1}
+  67%{opacity:.95} 68%{opacity:1}
+}
+
+/* ── Boot sequence ────────────────────────────────────────── */
+#boot{
+  position:fixed;inset:0;z-index:200;background:#050604;
+  display:flex;align-items:flex-start;padding:8vh 10vw;
+  transition:opacity .6s;
+}
+#boot.off{opacity:0;pointer-events:none}
+#bootText{
+  font-family:var(--mono);font-size:13px;line-height:1.8;
+  color:var(--amber);text-shadow:var(--glow-a);white-space:pre-wrap;
+}
+
+/* ── Klaxon ───────────────────────────────────────────────── */
+#klaxon{
+  position:fixed;top:0;left:0;right:0;z-index:95;height:0;overflow:hidden;
+  background:repeating-linear-gradient(-45deg,#3a1206 0 18px,#ff5a36 18px 36px);
+  display:flex;align-items:center;justify-content:center;
+  transition:height .25s;
+}
+body.alarm #klaxon{height:30px}
+#klaxon span{
+  font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.12em;
+  color:#fff;background:rgba(20,4,0,.8);padding:2px 14px;white-space:nowrap;
+}
+
+body.alarm .console{animation:jitter .14s infinite}
+@keyframes jitter{
+  0%,100%{transform:translate(0,0)}
+  25%{transform:translate(-1px,1px)}
+  50%{transform:translate(1px,-1px)}
+  75%{transform:translate(-1px,-1px)}
+}
+
+/* ── Console grid ─────────────────────────────────────────── */
+.console{
+  display:grid;height:100vh;padding:8px;gap:8px;
+  grid-template-columns:290px minmax(0,1fr) 350px;
+  grid-template-rows:56px minmax(0,1fr) 148px 218px;
+  grid-template-areas:
+    "hdr   hdr   hdr"
+    "vit   glb   anom"
+    "vit   scope anom"
+    "radar log   comms";
+}
+.topbar{grid-area:hdr}
+#vitalsPanel{grid-area:vit}
+#globePanel{grid-area:glb}
+#scopesPanel{grid-area:scope}
+#anomalyPanel{grid-area:anom}
+#radarPanel{grid-area:radar}
+#logPanel{grid-area:log}
+#commsPanel{grid-area:comms}
+
+/* ── Panel chrome ─────────────────────────────────────────── */
+.panel{
+  position:relative;background:var(--panel);
+  border:1px solid var(--line);
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+  opacity:0;
+}
+.panel::before,.panel::after{
+  content:"";position:absolute;width:11px;height:11px;pointer-events:none;z-index:2;
+}
+.panel::before{top:-1px;left:-1px;border-top:1px solid var(--amber-dim);border-left:1px solid var(--amber-dim)}
+.panel::after{bottom:-1px;right:-1px;border-bottom:1px solid var(--amber-dim);border-right:1px solid var(--amber-dim)}
+
+body.booted .panel,body.booted .topbar{
+  animation:panelIn .55s cubic-bezier(.2,.7,.2,1) forwards;
+  animation-delay:calc(var(--d)*110ms);
+}
+@keyframes panelIn{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+
+.ph{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  padding:6px 10px;border-bottom:1px dashed var(--line);
+  font-size:9.5px;letter-spacing:.14em;color:var(--dim);
+  text-transform:uppercase;
+}
+.ph b{color:var(--amber);font-weight:600}
+.ph span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph.sub{border-top:1px dashed var(--line);border-bottom:none}
+.pip{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.pip.ok{background:var(--green);box-shadow:var(--glow-g);animation:pipPulse 2.4s infinite}
+.pip.warn{background:var(--amber);box-shadow:var(--glow-a);animation:pipPulse 1.4s infinite}
+@keyframes pipPulse{50%{opacity:.35}}
+.ph-btn{
+  font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+  background:none;border:1px solid var(--line-hi);color:var(--amber);
+  padding:2px 8px;cursor:pointer;transition:.15s;
+}
+.ph-btn:hover{background:var(--amber);color:#111;box-shadow:var(--glow-a)}
+
+/* ── Header ───────────────────────────────────────────────── */
+.topbar{
+  grid-area:hdr;display:flex;align-items:center;gap:22px;
+  background:var(--panel);border:1px solid var(--line);
+  padding:0 14px;opacity:0;position:relative;
+}
+.topbar::before{
+  content:"";position:absolute;top:-1px;left:-1px;width:11px;height:11px;
+  border-top:1px solid var(--amber-dim);border-left:1px solid var(--amber-dim);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.eye{
+  width:30px;height:30px;border:1.5px solid var(--amber);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--glow-a), inset 0 0 8px rgba(255,180,84,.25);
+}
+.iris{
+  width:10px;height:10px;background:var(--amber);border-radius:50%;
+  box-shadow:var(--glow-a);animation:iris 7s infinite;
+}
+@keyframes iris{
+  0%,42%,100%{transform:translate(0,0)}
+  45%,60%{transform:translate(4px,-2px)}
+  63%,80%{transform:translate(-4px,2px)}
+}
+.brand-txt h1{
+  font-family:var(--disp);font-size:19px;letter-spacing:.3em;
+  color:var(--amber);text-shadow:var(--glow-a);line-height:1;
+}
+.brand-txt span{font-size:8.5px;letter-spacing:.2em;color:var(--dim)}
+
+.lamps{display:flex;gap:14px;margin-left:auto}
+.lamp{
+  display:flex;align-items:center;gap:6px;
+  font-size:9px;letter-spacing:.14em;color:var(--dim);
+}
+.lamp i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.lamp.on i{background:var(--green);box-shadow:var(--glow-g)}
+.lamp.warn i{background:var(--amber);box-shadow:var(--glow-a);animation:pipPulse 1.8s infinite}
+.lamp.err i{background:var(--red);box-shadow:0 0 7px rgba(255,90,54,.6);animation:pipPulse .5s infinite}
+
+.topbar-right{display:flex;align-items:center;gap:18px}
+.clockbox{text-align:right}
+.utc{
+  font-size:21px;font-weight:600;color:var(--amber);
+  text-shadow:var(--glow-a);letter-spacing:.08em;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.met{font-size:8.5px;letter-spacing:.12em;color:var(--dim)}
+.met span{color:var(--green)}
+
+#panicBtn{
+  position:relative;width:74px;height:34px;cursor:pointer;
+  background:repeating-linear-gradient(-45deg,#241105 0 7px,#57250c 7px 14px);
+  border:1px solid var(--red);color:#ffd9cf;
+  font-family:var(--disp);font-size:10px;letter-spacing:.18em;
+  transition:.15s;
+}
+#panicBtn:hover{box-shadow:0 0 12px rgba(255,90,54,.5);color:#fff}
+#panicBtn:active{transform:translateY(1px)}
+#panicBtn.armed{background:var(--red);color:#160500}
+
+/* ── MOD 01 · Vitals ──────────────────────────────────────── */
+.vitals{
+  flex:1;overflow:hidden;display:flex;flex-direction:column;
+  justify-content:space-evenly;padding:4px 10px;min-height:0;
+}
+.vital{display:flex;align-items:center;gap:8px;padding:3px 0}
+.vital .vl{flex:1;min-width:0}
+.vital .vname{
+  font-size:8.5px;letter-spacing:.12em;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.vital .vval{
+  font-size:16px;font-weight:600;color:var(--amber);
+  text-shadow:var(--glow-a);font-variant-numeric:tabular-nums;line-height:1.2;
+}
+.vital .vval small{font-size:9px;color:var(--amber-dim);font-weight:400;margin-left:3px}
+.vital .vval.enum{font-size:12.5px;letter-spacing:.08em;color:var(--green);text-shadow:var(--glow-g)}
+.vital canvas{width:74px;height:24px;flex-shrink:0;opacity:.9}
+.vtrend{font-size:10px;width:14px;text-align:center;flex-shrink:0}
+.vtrend.up{color:var(--green)}
+.vtrend.dn{color:var(--red)}
+
+.continents{flex-shrink:0}
+#continentBars{padding:7px 10px 9px}
+.cbar{display:flex;align-items:center;gap:8px;margin:4px 0}
+.cbar .cn{width:74px;font-size:8.5px;letter-spacing:.1em;color:var(--dim);flex-shrink:0}
+.cbar .ctrack{flex:1;height:5px;background:var(--panel-2);border:1px solid var(--line);position:relative}
+.cbar .cfill{
+  position:absolute;inset:0;right:auto;background:var(--green-dim);
+  box-shadow:inset 0 0 4px rgba(143,206,122,.5);
+  transition:width 1.8s cubic-bezier(.3,.7,.3,1);
+}
+.cbar .cv{width:30px;text-align:right;font-size:9px;color:var(--green);font-variant-numeric:tabular-nums}
+
+/* ── MOD 02 · Globe ───────────────────────────────────────── */
+.globe-wrap{position:relative;flex:1;min-height:0;cursor:grab}
+.globe-wrap:active{cursor:grabbing}
+#globeCanvas{position:absolute;inset:0;width:100%;height:100%}
+.globe-caption{
+  position:absolute;left:10px;bottom:8px;right:10px;z-index:3;
+  display:flex;gap:12px;align-items:baseline;
+  font-size:10px;pointer-events:none;
+}
+.gc-time{color:var(--amber-dim);flex-shrink:0}
+.gc-loc{color:var(--amber);text-shadow:var(--glow-a);letter-spacing:.1em;flex-shrink:0}
+.gc-desc{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.globe-hud{
+  position:absolute;top:8px;right:10px;z-index:3;display:flex;gap:12px;
+  font-size:8.5px;letter-spacing:.12em;color:var(--faint);pointer-events:none;
+}
+.globe-hud span{color:var(--dim)}
+
+/* ── MOD 03 · Scopes ──────────────────────────────────────── */
+.scopes{flex:1;display:flex;min-height:0}
+.scope{flex:1;position:relative;min-width:0}
+.scope+.scope{border-left:1px dashed var(--line)}
+.scope canvas{position:absolute;inset:0;width:100%;height:100%}
+.scope-l{
+  position:absolute;left:8px;top:6px;z-index:2;
+  font-size:8.5px;letter-spacing:.13em;color:var(--dim);pointer-events:none;
+}
+.scope-l em{
+  display:block;font-style:normal;font-size:11px;color:var(--green);
+  text-shadow:var(--glow-g);font-variant-numeric:tabular-nums;margin-top:2px;
+}
+
+/* ── MOD 04 · Anomalies ───────────────────────────────────── */
+.anomalies{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.anomalies::-webkit-scrollbar{width:4px}
+.anomalies::-webkit-scrollbar-thumb{background:var(--line-hi)}
+.anom{
+  border:1px solid var(--line);background:var(--panel-2);
+  padding:8px 10px 9px;position:relative;flex-shrink:0;
+  animation:anomIn .4s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes anomIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.anom.gone{transition:.45s;opacity:0;transform:translateX(20px)}
+.anom-top{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.anom-sev{
+  font-size:8px;letter-spacing:.1em;padding:1px 6px;font-weight:600;flex-shrink:0;
+}
+.anom-sev.amber{background:rgba(255,180,84,.14);color:var(--amber);border:1px solid var(--amber-dim)}
+.anom-sev.red{background:rgba(255,90,54,.14);color:var(--red);border:1px solid #7c3220}
+.anom-sev.grey{background:rgba(143,206,122,.1);color:var(--green);border:1px solid var(--green-dim)}
+.anom-title{font-size:11px;font-weight:600;color:var(--amber-hi);letter-spacing:.04em}
+.anom-loc{font-size:8.5px;letter-spacing:.1em;color:var(--dim);margin-bottom:4px}
+.anom-body{font-size:10px;line-height:1.45;color:var(--green);opacity:.85}
+.anom-actions{display:flex;gap:6px;margin-top:7px}
+.anom-actions button{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;cursor:pointer;
+  background:none;border:1px solid var(--line-hi);color:var(--green);
+  padding:3px 9px;transition:.15s;
+}
+.anom-actions button:hover{background:var(--green);color:#0a0d08;box-shadow:var(--glow-g)}
+.anom-actions button.defer:hover{background:var(--dim);color:#0a0d08;box-shadow:none}
+.anom-stamp{
+  font-size:9px;letter-spacing:.14em;color:var(--green);margin-top:7px;
+  text-shadow:var(--glow-g);
+}
+.anom-count{
+  position:absolute;left:0;bottom:0;height:2px;background:var(--red);
+  opacity:.7;transition:width 1s linear;
+}
+.anom-empty{
+  margin:auto;text-align:center;color:var(--faint);font-size:10px;
+  letter-spacing:.14em;line-height:2;
+}
+
+/* ── MOD 05 · Radar ───────────────────────────────────────── */
+.radar-wrap{flex:1;position:relative;min-height:0}
+#radarCanvas{position:absolute;inset:0;width:100%;height:100%}
+
+/* ── MOD 06 · Log ─────────────────────────────────────────── */
+.log{
+  flex:1;overflow-y:auto;padding:6px 10px;min-height:0;
+  font-size:10.5px;line-height:1.75;
+}
+.log::-webkit-scrollbar{width:4px}
+.log::-webkit-scrollbar-thumb{background:var(--line-hi)}
+.log-line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log-line .lt{color:var(--faint);margin-right:8px}
+.log-line .tag{margin-right:8px;font-weight:600}
+.log-line .tag.chk{color:var(--green-dim)}
+.log-line .tag.evt{color:var(--amber)}
+.log-line .tag.anm{color:var(--red)}
+.log-line .tag.sys{color:var(--dim)}
+.log-line .msg{color:var(--green)}
+.log-line.dim .msg{color:var(--dim)}
+
+/* ── MOD 07 · Comms ───────────────────────────────────────── */
+.comms{
+  flex:1;overflow-y:auto;padding:7px 10px;min-height:0;
+  display:flex;flex-direction:column;gap:5px;font-size:10.5px;
+}
+.comms::-webkit-scrollbar{width:4px}
+.comms::-webkit-scrollbar-thumb{background:var(--line-hi)}
+.comm{line-height:1.5;animation:commIn .3s}
+@keyframes commIn{from{opacity:0}to{opacity:1}}
+.comm .cs{font-weight:600;letter-spacing:.06em;margin-right:7px}
+.comm .cm{color:var(--green);opacity:.88}
+.comms-input{
+  flex-shrink:0;display:flex;align-items:center;gap:7px;
+  border-top:1px dashed var(--line);padding:7px 10px;font-size:10.5px;
+}
+.comms-input .prompt{color:var(--amber);font-weight:600;letter-spacing:.06em}
+.comms-input .typed{color:var(--green)}
+.caret{
+  width:7px;height:13px;background:var(--green);box-shadow:var(--glow-g);
+  animation:caretBlink 1s steps(2) infinite;
+}
+@keyframes caretBlink{50%{opacity:0}}
+
+/* ── Responsive fallback (the array prefers big screens) ──── */
+@media (max-width:1120px){
+  body{overflow:auto}
+  .console{
+    height:auto;grid-template-columns:1fr;
+    grid-template-rows:auto;
+    grid-template-areas:"hdr" "vit" "glb" "scope" "anom" "radar" "log" "comms";
+  }
+  .topbar{flex-wrap:wrap;height:auto;padding:10px 14px;gap:12px}
+  .lamps{margin-left:0}
+  #globePanel{height:420px}
+  #scopesPanel{height:150px}
+  #anomalyPanel{height:300px}
+  #radarPanel{height:260px}
+  #logPanel{height:240px}
+  #commsPanel{height:260px}
+}

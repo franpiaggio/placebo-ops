@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARGUS · Planetary Oversight Terminal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='13' fill='none' stroke='%23ffb454' stroke-width='2'/><circle cx='16' cy='16' r='5' fill='%23ffb454'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script>
+</head>
+<body>
+
+<!-- CRT boot sequence -->
+<div id="boot"><pre id="bootText"></pre></div>
+
+<!-- Klaxon banner (hidden unless dramatic) -->
+<div id="klaxon"><span>⚠ &nbsp;ALL SYSTEMS BRIEFLY DRAMATIC — REMAIN THEATRICAL — THIS IS NOT A DRILL (IT IS A DRILL) &nbsp;⚠</span></div>
+
+<main class="console" id="console">
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="topbar" style="--d:0">
+    <div class="brand">
+      <div class="eye"><div class="iris"></div></div>
+      <div class="brand-txt">
+        <h1>ARGUS</h1>
+        <span>PANOPTIC ORBITAL SYSTEMS · EST. 1997</span>
+      </div>
+    </div>
+
+    <div class="lamps">
+      <div class="lamp on"><i></i>PWR</div>
+      <div class="lamp on"><i></i>LINK</div>
+      <div class="lamp on"><i></i>ARRAY</div>
+      <div class="lamp warn" id="lampVibes"><i></i>VIBES</div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="clockbox">
+        <div class="utc" id="utcClock">00:00:00</div>
+        <div class="met">UTC · MET <span id="met">—</span> · PASS <span id="pass">—</span></div>
+      </div>
+      <button id="panicBtn" aria-label="Panic button"><span>PANIC</span></button>
+    </div>
+  </header>
+
+  <!-- ═══ MOD 01 · PLANETARY VITALS ═══ -->
+  <section class="panel" id="vitalsPanel" style="--d:1">
+    <div class="ph"><b>MOD·01</b><span>PLANETARY VITALS</span><i class="pip ok"></i></div>
+    <div class="vitals" id="vitals"></div>
+    <div class="continents">
+      <div class="ph sub"><b>MOD·01b</b><span>CONTINENTAL ACTIVITY</span></div>
+      <div id="continentBars"></div>
+    </div>
+  </section>
+
+  <!-- ═══ MOD 02 · ORBITAL PICTURE ═══ -->
+  <section class="panel" id="globePanel" style="--d:2">
+    <div class="ph"><b>MOD·02</b><span>ORBITAL PICTURE · EVERYTHING, LIVE</span><i class="pip ok"></i></div>
+    <div class="globe-wrap">
+      <canvas id="globeCanvas"></canvas>
+      <div class="globe-caption" id="globeCaption">
+        <span class="gc-time">--:--:-- UTC</span>
+        <span class="gc-loc">ACQUIRING…</span>
+        <span class="gc-desc">calibrating the concept of "everything"</span>
+      </div>
+      <div class="globe-hud">
+        <span>ALT 407 KM</span><span>INC 51.6°</span><span id="hudSats">SATS —</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MOD 03 · WAVEFORMS ═══ -->
+  <section class="panel" id="scopesPanel" style="--d:3">
+    <div class="ph"><b>MOD·03</b><span>PLANETARY WAVEFORMS</span><i class="pip ok"></i></div>
+    <div class="scopes">
+      <div class="scope"><canvas></canvas><div class="scope-l">SEISMIC MURMUR<em id="scv0">—</em></div></div>
+      <div class="scope"><canvas></canvas><div class="scope-l">IONOSPHERIC HUM<em id="scv1">—</em></div></div>
+      <div class="scope"><canvas></canvas><div class="scope-l">GLOBAL WI-FI ANXIETY<em id="scv2">—</em></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ MOD 04 · ANOMALY BOARD ═══ -->
+  <section class="panel" id="anomalyPanel" style="--d:4">
+    <div class="ph"><b>MOD·04</b><span>ANOMALY BOARD</span><button class="ph-btn" id="ackAll">ACK ALL</button></div>
+    <div class="anomalies" id="anomalies"></div>
+  </section>
+
+  <!-- ═══ MOD 05 · ATMOSPHERIC OBJECTS ═══ -->
+  <section class="panel" id="radarPanel" style="--d:5">
+    <div class="ph"><b>MOD·05</b><span>ATMOSPHERIC OBJECTS</span><i class="pip warn"></i></div>
+    <div class="radar-wrap"><canvas id="radarCanvas"></canvas></div>
+  </section>
+
+  <!-- ═══ MOD 06 · TELEMETRY ═══ -->
+  <section class="panel" id="logPanel" style="--d:6">
+    <div class="ph"><b>MOD·06</b><span>RAW TELEMETRY · UNFILTERED · UNEXPLAINED</span><i class="pip ok"></i></div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <!-- ═══ MOD 07 · GROUND STATION COMMS ═══ -->
+  <section class="panel" id="commsPanel" style="--d:7">
+    <div class="ph"><b>MOD·07</b><span>GROUND STATION COMMS</span><i class="pip ok"></i></div>
+    <div class="comms" id="comms"></div>
+    <div class="comms-input">
+      <span class="prompt">SVALBARD&gt;</span>
+      <span class="typed" id="commsTyped"></span><span class="caret"></span>
+    </div>
+  </section>
+
+</main>
+
+<!-- CRT overlays -->
+<div class="crt"></div>
+<div class="vignette"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

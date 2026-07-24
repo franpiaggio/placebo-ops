@@ -1,7 +1,7 @@
 # PULSE // Operations Center
 
 **Directorio:** `/Users/franciscopiaggio/localwork/nonsense/`  
-**Stack:** Vanilla HTML + CSS + Three.js + Chart.js + GSAP  
+**Stack:** Vanilla HTML + CSS + Three.js + Smoothie Charts + GSAP  
 **Vista previa:** Abrir `index.html` en cualquier navegador (Chrome recomendado).
 
 ---
@@ -92,7 +92,7 @@ nonsense/
 - Toggle en header con animación luna/sun
 - Persistencia en `localStorage`
 - Detecta `prefers-color-scheme`
-- Adapta Chart.js, Three.js globe, y sparklines al cambiar
+- Adapta Smoothie Charts, Three.js globe, y sparklines al cambiar
 
 ### 4.7. Responsive
 
@@ -125,7 +125,7 @@ nonsense/
 ## 6. Cómo correr / reproducir
 
 1. Abrir `index.html` directamente en Chrome/Safari/Firefox.
-2. No requiere servidor (CDNs para Three.js, Chart.js, GSAP).
+2. No requiere servidor (CDNs para Three.js, Smoothie Charts, GSAP).
 3. Para desarrollo: cualquier servidor estático (`python3 -m http.server` o `npx serve`).
 4. Todo el estado es en memoria; recargar la página resetea.
 
@@ -136,7 +136,7 @@ nonsense/
 ### `app.js` — módulos principales
 
 - `initGlobe()` — Three.js scene, camera, renderer, animation loop
-- `initCharts()` — Chart.js line chart (Traffic/Load)
+- `initCharts()` — Smoothie Charts real-time scrolling (Traffic/Load)
 - `updateKPIs()` + `drawSparkline()` — contadores animados con GSAP + SVG sparklines
 - `initKanban()` / `moveKanbanCard()` / `autoMoveKanban()` — pipeline de tareas
 - `createAlert()` / `resolveAlert()` / `ignoreAlert()` — sistema de alertas
@@ -144,7 +144,7 @@ nonsense/
 - `addNotification()` / `renderNotification()` — centro de notificaciones
 - `initFakeCursors()` / `startCursorLoop()` — cursores fantasma Figma
 - `triggerGlobeEvent()` — emite eventos en el globo (flash + ping + packet + overlay)
-- `applyTheme()` — cambio de tema con adaptación de Chart.js y Three.js
+- `applyTheme()` — cambio de tema con adaptación de Smoothie Charts y Three.js
 
 ### CSS clave
 
