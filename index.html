@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse — Operations Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/smoothie@1.36.0/smoothie.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-mark"></div>
+                <div class="brand-text">
+                    <h1>Pulse</h1>
+                    <span>Operations</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <span>Nodes</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span>Streams</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    <span>Signals</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
+                    <span>Yield</span>
+                </a>
+            </nav>
+            <div class="sidebar-status">
+                <div class="status-line"><span class="status-dot ok"></span>Platform operational</div>
+                <div class="status-line"><span class="status-dot warn"></span>Staging degraded</div>
+                <div class="status-line"><span class="status-dot err"></span>US-West-2 alert</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <h2>Operations Overview</h2>
+                    <div class="meta">Global monitoring — 12 regions active</div>
+                </div>
+                <div class="header-right">
+                    <div class="clock-widget">
+                        <span class="clock-time" id="clock">00:00</span>
+                        <span class="clock-date" id="date">—</span>
+                    </div>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    </button>
+                    <div class="notifications-btn" id="notifBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span class="notif-badge" id="notifBadge">0</span>
+                    </div>
+                    <div class="user-avatar">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User">
+                    </div>
+                </div>
+            </header>
+
+            <div class="notifications-panel" id="notifPanel">
+                <div class="notif-header"><h3>Notifications</h3><button class="notif-clear" id="clearNotifs">Mark all read</button></div>
+                <div class="notif-list" id="notifList"></div>
+            </div>
+
+            <div class="dashboard">
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-track">
+                            <span class="kpi-label">System Load</span>
+                            <span class="kpi-value" id="kpi1">0</span>
+                        </div>
+                        <div class="kpi-spark" id="spark1"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-track">
+                            <span class="kpi-label">API Latency</span>
+                            <span class="kpi-value" id="kpi2">0</span>
+                        </div>
+                        <div class="kpi-spark" id="spark2"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-track">
+                            <span class="kpi-label">Active Nodes</span>
+                            <span class="kpi-value" id="kpi3">0</span>
+                        </div>
+                        <div class="kpi-spark" id="spark3"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-track">
+                            <span class="kpi-label">Error Rate</span>
+                            <span class="kpi-value" id="kpi4">0</span>
+                        </div>
+                        <div class="kpi-spark" id="spark4"></div>
+                    </div>
+                </div>
+
+                <!-- Globe + Kanban -->
+                <div class="middle-row">
+                    <div class="globe-widget">
+                        <div class="widget-header">
+                            <h3>Global Topology</h3>
+                            <span class="live-badge"><span class="live-dot"></span>Live</span>
+                        </div>
+                        <div class="globe-body">
+                            <canvas id="globeCanvas"></canvas>
+                            <div class="globe-overlay">
+                                <div class="region-pill active"><span class="pill-dot"></span>us-east-1</div>
+                                <div class="region-pill"><span class="pill-dot warn"></span>us-west-2</div>
+                                <div class="region-pill"><span class="pill-dot"></span>eu-west-1</div>
+                                <div class="region-pill"><span class="pill-dot"></span>ap-south-1</div>
+                                <div class="region-pill"><span class="pill-dot"></span>ap-northeast-1</div>
+                                <div class="region-pill"><span class="pill-dot"></span>sa-east-1</div>
+                                <div class="region-pill"><span class="pill-dot"></span>ap-southeast-1</div>
+                                <div class="region-pill"><span class="pill-dot"></span>ap-southeast-2</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-card kanban-widget">
+                        <div class="widget-header">
+                            <h3>Live Operations</h3>
+                            <span class="widget-count" id="kanbanCount">0 tasks</span>
+                        </div>
+                        <div class="kanban-board" id="kanbanBoard">
+                            <div class="kanban-column" data-column="backlog">
+                                <div class="kanban-header"><span class="kanban-dot" style="background:#a8a29e"></span><span>Queued</span><span class="kanban-count" id="col-backlog">0</span></div>
+                                <div class="kanban-cards" id="backlog"></div>
+                            </div>
+                            <div class="kanban-column" data-column="progress">
+                                <div class="kanban-header"><span class="kanban-dot" style="background:#1d4ed8"></span><span>Active</span><span class="kanban-count" id="col-progress">0</span></div>
+                                <div class="kanban-cards" id="progress"></div>
+                            </div>
+                            <div class="kanban-column" data-column="review">
+                                <div class="kanban-header"><span class="kanban-dot" style="background:#c2410c"></span><span>Review</span><span class="kanban-count" id="col-review">0</span></div>
+                                <div class="kanban-cards" id="review"></div>
+                            </div>
+                            <div class="kanban-column" data-column="done">
+                                <div class="kanban-header"><span class="kanban-dot" style="background:#15803d"></span><span>Closed</span><span class="kanban-count" id="col-done">0</span></div>
+                                <div class="kanban-cards" id="done"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Charts + Alerts + Chat -->
+                <div class="bottom-row">
+                    <div class="widget-card trend-widget">
+                        <div class="widget-header"><h3>Traffic Load</h3></div>
+                        <div class="chart-body"><canvas id="mainChart"></canvas></div>
+                    </div>
+                    <div class="widget-card alerts-widget">
+                        <div class="widget-header"><h3>Active Alerts</h3><button class="dismiss-all" id="dismissAll">Resolve All</button></div>
+                        <div class="alerts-list" id="alertsList"></div>
+                    </div>
+                    <div class="widget-card chat-widget">
+                        <div class="widget-header"><h3>Team Comms</h3><span class="online-count" id="onlineCount">5 online</span></div>
+                        <div class="chat-messages" id="chatMessages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chatInput" placeholder="Type a message..." readonly>
+                            <button id="chatSend" disabled>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div class="alert-toast-container" id="toastContainer"></div>
+    <div class="fake-cursors-layer" id="fakeCursorsLayer"></div>
+    <script src="app.js"></script>
+</body>
+</html>
