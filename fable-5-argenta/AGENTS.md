@@ -73,6 +73,27 @@ TRANQUI · SIGA SIGA".
   argenta confirmada a ojo" en la ciudad más cercana (el click se
   des-proyecta a coords de mundo según la cámara).
 
+### Capas funcionales (el mapa como sistema de monitoreo de verdad)
+
+1. **Choropleth federal vivo:** cada punto de tierra conoce su región
+   (AMBA/CENTRO/NOA/NEA/CUYO/PATAGONIA/CÓRDOBA*, asignada por cajas
+   lat/lon al construir la grilla) y su brillo sigue en tiempo real el
+   valor del Termómetro Federal (MOD·01b). Las barras y el mapa son la
+   misma data.
+2. **Corredores troncales con flota:** RN 9 (Corredor Norte), RN 7 (a
+   Cuyo), RN 3 (Atlántica, hasta Ushuaia), RN 40 (La Cuarenta, por la
+   cordillera) y RN 2 (a la Costa) como polilíneas punteadas, con 2
+   vehículos por ruta circulando en vivo (rebote en cabeceras). De cerca
+   (zoom > 1,7×) se identifican: MICRO SEMI-CAMA, CAMIÓN DE HACIENDA,
+   MOTORHOME DE JUBILADOS, CISTERNA DE FERNET, CAMIONETA CON PERRO ATRÁS.
+   Durante el BARDO manejan al doble, obvio.
+3. **Sistemas meteorológicos itinerantes:** uno a la vez — SUDESTADA,
+   ZONDA, TORMENTA DE SANTA ROSA, NIEBLA MAÑANERA, VIENTO PATAGÓNICO —
+   como halo translúcido con borde punteado que cruza el país en 40–60s
+   siguiendo una trayectoria geográficamente plausible, con fade in/out.
+   Al entrar loguea su parte del "SMN criollo" y el HUD pasa de
+   "CLIMA: DESPEJADO" al sistema en curso.
+
 ## 5. Reglas
 
 1. Humor costumbrista, nunca político-partidario. Nada de figuras públicas,

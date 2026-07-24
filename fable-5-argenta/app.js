@@ -475,7 +475,20 @@ function dentroDe(lon, lat, poli) {
   return dentro;
 }
 
-/* Grilla de puntos de tierra, calculada una vez. */
+/* Región federal de cada punto — misma data que el Termómetro (MOD·01b).
+   Índices en FEDERAL: 0 AMBA · 1 CENTRO · 2 NOA · 3 NEA · 4 CUYO ·
+   5 PATAGONIA · 6 CÓRDOBA* */
+function regionDe(lon, lat) {
+  if (lat < -33.5 && lat > -35.8 && lon > -60.2 && lon < -57.0) return 0; // AMBA
+  if (lat > -30 && lon < -63.5) return 2;                                 // NOA
+  if (lat >= -30.5 && lon >= -63.5) return 3;                             // NEA
+  if (lat <= -40) return 5;                                               // PATAGONIA
+  if (lat <= -30 && lat > -37.5 && lon < -66.5) return 4;                 // CUYO
+  if (lat <= -29 && lat > -35.5 && lon >= -66.5 && lon < -61.5) return 6; // CÓRDOBA*
+  return 1;                                                               // CENTRO
+}
+
+/* Grilla de puntos de tierra, calculada una vez (con su región). */
 const TIERRA = [];
 (function construir() {
   const PASO = 0.42;
@@ -483,11 +496,40 @@ const TIERRA = [];
     for (let lon = -73.6; lon <= -53.4; lon += PASO) {
       if (dentroDe(lon, lat, ARG_CONTINENTAL) || dentroDe(lon, lat, ARG_TDF)
           || ISLAS.some((p) => dentroDe(lon, lat, p))) {
-        TIERRA.push([lon, lat]);
+        TIERRA.push([lon, lat, regionDe(lon, lat)]);
       }
     }
   }
 })();
+
+/* Corredores troncales — trazado grueso, como el mapa de la terminal */
+const RUTAS = [
+  { n: 'RN 9 · CORREDOR NORTE', p: [[-58.4,-34.6],[-60.6,-32.9],[-62.1,-32.2],[-64.2,-31.4],[-64.9,-29.4],[-65.2,-26.8],[-65.4,-24.8],[-65.3,-24.2]] },
+  { n: 'RN 7 · A CUYO', p: [[-58.4,-34.6],[-60.9,-34.5],[-63.4,-34.1],[-66.3,-33.3],[-68.8,-32.9]] },
+  { n: 'RN 3 · ATLÁNTICA', p: [[-58.4,-34.6],[-60.5,-36.5],[-62.3,-38.7],[-64.0,-40.8],[-65.3,-43.3],[-67.5,-45.9],[-67.8,-49.0],[-69.2,-51.6],[-68.3,-54.8]] },
+  { n: 'RN 40 · LA CUARENTA', p: [[-65.3,-24.2],[-66.2,-26.5],[-68.5,-29.5],[-69.2,-31.6],[-68.8,-32.9],[-69.8,-34.5],[-70.2,-36.5],[-70.4,-38.9],[-71.3,-41.1],[-71.5,-44.5],[-71.6,-47.5],[-72.1,-50.0],[-69.2,-51.6]] },
+  { n: 'RN 2 · A LA COSTA', p: [[-58.4,-34.6],[-57.9,-35.5],[-57.6,-36.6],[-57.5,-38.0]] },
+];
+
+const VEHICULOS_TIPOS = [
+  'MICRO SEMI-CAMA', 'CAMIÓN DE HACIENDA', 'MOTORHOME DE JUBILADOS',
+  'FLETE "EL RAYO"', 'COMBI DE EGRESADOS', 'CISTERNA DE FERNET',
+  'REPARTO DE FACTURAS', 'CAMIONETA CON PERRO ATRÁS',
+];
+
+/* Sistemas meteorológicos — uno a la vez, cruzando despacio */
+const CLIMAS = [
+  { n: 'SUDESTADA', desde: [-56.0,-37.5], hasta: [-59.5,-33.8], radio: 2.5, dur: 50,
+    log: 'sudestada entrando por el estuario · ropa tendida en riesgo' },
+  { n: 'ZONDA', desde: [-70.5,-33.0], hasta: [-66.5,-32.5], radio: 1.6, dur: 45,
+    log: 'viento Zonda bajando la cordillera · peinados en emergencia' },
+  { n: 'TORMENTA DE SANTA ROSA', desde: [-64.5,-37.5], hasta: [-59.0,-33.5], radio: 2.8, dur: 55,
+    log: 'la de Santa Rosa llegó puntual · sorprendió igual, como todos los años' },
+  { n: 'NIEBLA MAÑANERA', desde: [-59.5,-33.5], hasta: [-58.0,-34.8], radio: 1.8, dur: 40,
+    log: 'niebla cerrada en el litoral · todo el mundo maneja igual' },
+  { n: 'VIENTO PATAGÓNICO', desde: [-71.0,-50.0], hasta: [-65.5,-44.0], radio: 3.5, dur: 60,
+    log: 'viento patagónico sostenido · boinas aseguradas con doble nudo' },
+];
 
 const mapa = { eventos: [], W: 0, H: 0, activa: null, nEventos: 0 };
 
@@ -503,6 +545,12 @@ function iniciarMapa() {
 
   let escala = 1, offX = 0, offY = 0;
   let PTS = []; // tierra proyectada (coords base)
+  let proyActual = null;
+
+  /* índices de puntos agrupados por región (una sola vez) */
+  const REGION_PTS = Array.from({ length: FEDERAL.length }, () => []);
+  TIERRA.forEach((p, i) => REGION_PTS[p[2]].push(i));
+
   function calcularProyeccion() {
     const spanX = (B.lonMax - B.lonMin) * KX;
     const spanY = B.latMax - B.latMin;
@@ -514,15 +562,56 @@ function iniciarMapa() {
       offX + (lon - B.lonMin) * KX * escala,
       offY + (B.latMax - lat) * escala,
     ];
+    proyActual = proy;
     PTS = TIERRA.map(([lon, lat]) => proy(lon, lat));
     CIUDADES.forEach((cd) => { [cd._x, cd._y] = proy(cd.lon, cd.lat); });
+    /* rutas a coords de mundo + longitudes acumuladas */
+    RUTAS.forEach((rt) => {
+      rt._pts = rt.p.map(([lon, lat]) => proy(lon, lat));
+      rt._acum = [0];
+      for (let i = 1; i < rt._pts.length; i++) {
+        rt._acum.push(rt._acum[i - 1] + Math.hypot(
+          rt._pts[i][0] - rt._pts[i - 1][0],
+          rt._pts[i][1] - rt._pts[i - 1][1]));
+      }
+      rt._total = rt._acum[rt._acum.length - 1];
+    });
   }
+
+  function posEnRuta(rt, s) {
+    const a = rt._acum;
+    let i = 1;
+    while (i < a.length - 1 && a[i] < s) i++;
+    const seg = a[i] - a[i - 1] || 1;
+    const t = (s - a[i - 1]) / seg;
+    const p0 = rt._pts[i - 1], p1 = rt._pts[i];
+    return [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
+  }
+
+  /* la flota federal: 2 vehículos por corredor */
+  const FLOTA = [];
+  function armarFlota() {
+    if (FLOTA.length || !RUTAS[0]._total) return;
+    RUTAS.forEach((rt) => {
+      for (let i = 0; i < 2; i++) {
+        FLOTA.push({
+          rt, s: rand(0, rt._total), dir: Math.random() < 0.5 ? 1 : -1,
+          vel: rand(5, 12), tipo: pickNR(VEHICULOS_TIPOS),
+        });
+      }
+    });
+  }
+
+  /* clima: un sistema a la vez */
+  let clima = null;
+  let proxClima = performance.now() + 12000;
 
   function redim() {
     mapa.W = wrap.clientWidth; mapa.H = wrap.clientHeight;
     if (!mapa.W) return;
     canvas.width = mapa.W * dpr; canvas.height = mapa.H * dpr;
     calcularProyeccion();
+    armarFlota();
   }
   new ResizeObserver(redim).observe(wrap);
   redim();
@@ -601,18 +690,80 @@ function iniciarMapa() {
       dpr * (mapa.H / 2 - cam.cy * cam.z)
     );
 
-    /* tierra: los puntos escalan con el zoom (más legible de cerca) */
-    ctx.fillStyle = 'rgba(117,170,219,0.55)';
+    /* tierra: choropleth vivo — brillo por región según Termómetro Federal */
     const d2 = 2.1, r2 = d2 / 2;
-    for (let i = 0; i < PTS.length; i++) {
-      ctx.fillRect(PTS[i][0] - r2, PTS[i][1] - r2, d2, d2);
+    for (let r = 0; r < FEDERAL.length; r++) {
+      const alfa = 0.24 + (FEDERAL[r][1] / 100) * 0.5;
+      ctx.fillStyle = `rgba(117,170,219,${alfa.toFixed(3)})`;
+      const idxs = REGION_PTS[r];
+      for (let j = 0; j < idxs.length; j++) {
+        const p = PTS[idxs[j]];
+        ctx.fillRect(p[0] - r2, p[1] - r2, d2, d2);
+      }
     }
+
+    /* corredores troncales */
+    ctx.setLineDash([3 / cam.z, 4 / cam.z]);
+    ctx.strokeStyle = 'rgba(138,127,114,0.42)';
+    ctx.lineWidth = 1 / cam.z;
+    RUTAS.forEach((rt) => {
+      ctx.beginPath();
+      rt._pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    /* la flota federal circulando */
+    ctx.fillStyle = 'rgba(127,176,105,0.95)';
+    FLOTA.forEach((v) => {
+      v.s += v.vel * v.dir * dt * (BARDO ? 2.5 : 1);
+      if (v.s <= 0) { v.s = 0; v.dir = 1; }
+      if (v.s >= v.rt._total) { v.s = v.rt._total; v.dir = -1; }
+      const [x, y] = posEnRuta(v.rt, v.s);
+      v._x = x; v._y = y;
+      ctx.fillRect(x - 1.3, y - 1.3, 2.6, 2.6);
+    });
 
     /* ciudades */
     ctx.fillStyle = 'rgba(246,180,14,0.9)';
     CIUDADES.forEach((cd) => {
       ctx.beginPath(); ctx.arc(cd._x, cd._y, 2.1, 0, 6.28); ctx.fill();
     });
+
+    /* sistema meteorológico itinerante */
+    if (!clima && now > proxClima) {
+      const def = pickNR(CLIMAS);
+      clima = { def, t: 0 };
+      $('#hudClima').textContent = `CLIMA: ${def.n}`;
+      registrar('ojo', `SMN criollo: ${def.log}`);
+    }
+    if (clima) {
+      clima.t += dt;
+      const def = clima.def;
+      if (clima.t >= def.dur) {
+        clima = null;
+        proxClima = now + rand(18000, 38000);
+        $('#hudClima').textContent = 'CLIMA: DESPEJADO';
+      } else {
+        const kk = clima.t / def.dur;
+        const lon = def.desde[0] + (def.hasta[0] - def.desde[0]) * kk;
+        const lat = def.desde[1] + (def.hasta[1] - def.desde[1]) * kk;
+        const [wx, wy] = proyActual(lon, lat);
+        clima._wx = wx; clima._wy = wy;
+        const R = def.radio * escala;
+        const fade = Math.min(1, kk * 6, (1 - kk) * 6); // entra y sale suave
+        const g = ctx.createRadialGradient(wx, wy, R * 0.12, wx, wy, R);
+        g.addColorStop(0, `rgba(168,203,233,${0.2 * fade})`);
+        g.addColorStop(1, 'rgba(168,203,233,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(wx, wy, R, 0, 6.28); ctx.fill();
+        ctx.setLineDash([4 / cam.z, 5 / cam.z]);
+        ctx.strokeStyle = `rgba(168,203,233,${0.4 * fade})`;
+        ctx.lineWidth = 1 / cam.z;
+        ctx.beginPath(); ctx.arc(wx, wy, R, 0, 6.28); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
 
     /* pings (en mundo) */
     for (let i = mapa.eventos.length - 1; i >= 0; i--) {
@@ -663,6 +814,29 @@ function iniciarMapa() {
         ctx.textAlign = sx > mapa.W / 2 ? 'right' : 'left';
         ctx.fillText(cd.n, sx + (sx > mapa.W / 2 ? -9 : 9), sy + 3);
       });
+      /* la flota, identificada de cerca */
+      const alfaF = clamp((cam.z - 1.7) / 0.5, 0, 0.7);
+      if (alfaF > 0.05) {
+        ctx.font = '9px "Chivo Mono"';
+        ctx.fillStyle = `rgba(127,176,105,${alfaF})`;
+        FLOTA.forEach((v) => {
+          const [sx, sy] = aPantalla(v._x, v._y);
+          if (sx < 14 || sx > mapa.W - 14 || sy < 14 || sy > mapa.H - 42) return;
+          ctx.textAlign = 'left';
+          ctx.fillText(v.tipo, sx + 7, sy - 5);
+        });
+      }
+    }
+
+    /* etiqueta del sistema meteorológico */
+    if (clima && clima._wx !== undefined) {
+      const [sx, sy] = aPantalla(clima._wx, clima._wy);
+      if (sx > 20 && sx < mapa.W - 20 && sy > 24 && sy < mapa.H - 46) {
+        ctx.font = '700 11px "Chivo Mono"';
+        ctx.fillStyle = 'rgba(168,203,233,0.85)';
+        ctx.textAlign = 'center';
+        ctx.fillText(`◌ ${clima.def.n}`, sx, sy - clima.def.radio * escala * cam.z - 7);
+      }
     }
   })(prev);
 }
