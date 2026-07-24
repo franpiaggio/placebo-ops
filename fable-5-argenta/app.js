@@ -224,13 +224,16 @@ const ALERTAS = [
     cuerpo: 'Llegaron tres budines y ninguna gaseosa. Auditoría en curso.' },
 ];
 
+/* Precios anclados al tipo de cambio real (~$1.420/USD, jul 2026):
+   blue ≈ 1 USD · alfajor triple ≈ 2 USD · equipo de mate ≈ 4 USD ·
+   chori ≈ 3,5 USD · mila napo c/papas ≈ 10 USD · fernet bien servido ≈ 5 USD */
 const COTIZACIONES = [
-  { n: 'DÓLAR BLUE',       v: 1487.50, paso: 12 },
-  { n: 'DÓLAR ALFAJOR',    v: 2140.00, paso: 25 },
-  { n: 'DÓLAR MATE',       v: 1893.25, paso: 18 },
-  { n: 'DÓLAR CHORIPÁN',   v: 3450.75, paso: 40 },
-  { n: 'DÓLAR MILA NAPO',  v: 5120.00, paso: 55 },
-  { n: 'DÓLAR FERNET 70/30', v: 2780.50, paso: 30 },
+  { n: 'DÓLAR BLUE',         v: 1423.50, paso: 6 },
+  { n: 'DÓLAR ALFAJOR',      v: 2850.00, paso: 14 },
+  { n: 'DÓLAR MATE',         v: 5680.00, paso: 28 },
+  { n: 'DÓLAR CHORIPÁN',     v: 4970.00, paso: 25 },
+  { n: 'DÓLAR MILA NAPO',    v: 14200.00, paso: 70 },
+  { n: 'DÓLAR FERNET 70/30', v: 7100.00, paso: 35 },
 ];
 
 const GRUPO_SCRIPT = [
@@ -312,6 +315,7 @@ function iniciarReloj() {
 
 /* ═══════════════ MOD 01 · VITALES ═══════════════ */
 
+/* Pool de métricas — 7 visibles, van rotando cada unos segundos */
 const VITALES = [
   { n: 'TEMPERATURA DEL AGUA', u: '°C', v: 82.4, min: 74, max: 93, paso: 0.9, dec: 1,
     estado: (v) => v < 78 ? 'TIBIA (OJO)' : v <= 87 ? 'PELO' : 'TE QUEMÁS' },
@@ -322,6 +326,15 @@ const VITALES = [
   { n: 'STOCK YERBATERO', u: 't', v: 284502, min: 220000, max: 340000, paso: 6000, dec: 0, big: true },
   { n: 'PACIENCIA EN FILA', u: 'min', v: 7.2, min: 3.1, max: 9.5, paso: 0.4, dec: 1, sesgo: -0.02 },
   { n: 'ÁNIMO NACIONAL', enum: ['QUEJOSO PERO FELIZ', 'MODO FINDE', 'NOSTÁLGICO', 'ENFIESTADO', 'ANSIOSO', 'NI AHÍ'], ei: 0 },
+  { n: 'PRESIÓN DEL SIFÓN', u: 'kPa', v: 312, min: 280, max: 340, paso: 6, dec: 0 },
+  { n: 'SOBREMESA PROMEDIO', u: 'hs', v: 2.8, min: 1.2, max: 4.9, paso: 0.3, dec: 1, sesgo: 0.01 },
+  { n: 'BOCINAZOS ACUMULADOS', u: '/h', v: 48210, min: 30000, max: 70000, paso: 2500, dec: 0, big: true },
+  { n: 'FACTURAS EN CIRCULACIÓN', u: 'doc/h', v: 1842, min: 900, max: 2600, paso: 120, dec: 0, big: true },
+  { n: 'GENTE DICIENDO "YA SALGO"', u: 'miles', v: 312, min: 180, max: 520, paso: 22, dec: 0 },
+  { n: 'DEBATE FUTBOLERO', u: '°C', v: 74, min: 40, max: 99, paso: 6, dec: 0,
+    estado: (v) => v > 90 ? 'AL ROJO' : v > 65 ? 'CALIENTE' : 'TIBIO' },
+  { n: 'RESERVA DE HIELO', u: 'bolsitas', v: 8420, min: 2000, max: 15000, paso: 900, dec: 0, big: true,
+    estado: (v) => v < 4000 ? 'CRÍTICO (ES SÁBADO)' : 'OK' },
 ];
 
 const FEDERAL = [
@@ -329,23 +342,24 @@ const FEDERAL = [
   ['CUYO', 78], ['PATAGONIA', 88], ['CÓRDOBA*', 94],
 ];
 
+const SLOTS_VIT = 7;
+const vitVisibles = Array.from({ length: SLOTS_VIT }, (_, i) => i);
+const vitFilas = [];
+
 function iniciarVitales() {
   const wrap = $('#vitales');
-  VITALES.forEach((vt, i) => {
+  VITALES.forEach((vt) => {
+    if (!vt.enum) vt.hist = Array.from({ length: 32 }, () => vt.v + rand(-vt.paso, vt.paso));
+  });
+  for (let i = 0; i < SLOTS_VIT; i++) {
     const fila = document.createElement('div');
     fila.className = 'vital';
-    if (vt.enum) {
-      fila.innerHTML = `<div class="vl"><div class="vnombre">${vt.n}</div>
-        <div class="vvalor enum" id="vv${i}">${vt.enum[0]}</div></div>
-        <span class="vtend" id="vt${i}">·</span>`;
-    } else {
-      fila.innerHTML = `<div class="vl"><div class="vnombre">${vt.n}</div>
-        <div class="vvalor" id="vv${i}">—</div></div>
-        <span class="vtend" id="vt${i}">·</span><canvas id="vc${i}"></canvas>`;
-      vt.hist = Array.from({ length: 32 }, () => vt.v + rand(-vt.paso, vt.paso));
-    }
+    fila.innerHTML = `<div class="vl"><div class="vnombre"></div>
+      <div class="vvalor">—</div></div>
+      <span class="vtend">·</span><canvas></canvas>`;
     wrap.appendChild(fila);
-  });
+    vitFilas.push(fila);
+  }
 
   const barras = $('#federalBars');
   FEDERAL.forEach(([n], i) => {
@@ -359,36 +373,70 @@ function iniciarVitales() {
 
   actualizarVitales();
   setInterval(actualizarVitales, 2400);
+  setInterval(rotarVital, 6200);
   actualizarFederal();
   setInterval(actualizarFederal, 3600);
 }
 
+function renderVital(slot, tendencia) {
+  const vt = VITALES[vitVisibles[slot]];
+  const fila = vitFilas[slot];
+  fila.querySelector('.vnombre').textContent = vt.n;
+  const val = fila.querySelector('.vvalor');
+  const cv = fila.querySelector('canvas');
+  const t = fila.querySelector('.vtend');
+  if (vt.enum) {
+    val.className = 'vvalor enum';
+    val.textContent = BARDO ? 'ALTERADO' : vt.enum[vt.ei];
+    cv.style.display = 'none';
+    t.textContent = '·'; t.className = 'vtend';
+    return;
+  }
+  val.className = 'vvalor';
+  const num = vt.big ? Math.round(vt.v).toLocaleString('es-AR') : vt.v.toFixed(vt.dec).replace('.', ',');
+  const estado = vt.estado ? `<span class="estado">${vt.estado(vt.v)}</span>` : '';
+  val.innerHTML = `${num}<small>${vt.u}</small>${estado}`;
+  cv.style.display = '';
+  if (tendencia !== undefined) {
+    t.textContent = Math.abs(tendencia) < vt.paso * 0.15 ? '·' : tendencia > 0 ? '▲' : '▼';
+    t.className = 'vtend ' + (Math.abs(tendencia) < vt.paso * 0.15 ? '' : tendencia > 0 ? 'up' : 'dn');
+  }
+  dibujarSpark(cv, vt);
+}
+
 function actualizarVitales() {
-  VITALES.forEach((vt, i) => {
-    const el = $(`#vv${i}`), t = $(`#vt${i}`);
+  /* deriva TODO el pool — las métricas ocultas siguen viviendo */
+  VITALES.forEach((vt) => {
     if (vt.enum) {
-      if (Math.random() < 0.2) {
-        vt.ei = (vt.ei + randi(1, vt.enum.length - 1)) % vt.enum.length;
-        el.textContent = BARDO ? 'ALTERADO' : vt.enum[vt.ei];
-      }
+      if (Math.random() < 0.2) vt.ei = (vt.ei + randi(1, vt.enum.length - 1)) % vt.enum.length;
       return;
     }
-    const prev = vt.v;
+    vt.prev = vt.v;
     const factor = BARDO ? 3 : 1;
     vt.v = clamp(vt.v + rand(-vt.paso, vt.paso) * factor + (vt.sesgo || 0), vt.min, vt.max);
     vt.hist.push(vt.v); vt.hist.shift();
-    const valor = vt.big ? Math.round(vt.v).toLocaleString('es-AR') : pesos(vt.v, vt.dec).replace(/\.00$/, '');
-    const estado = vt.estado ? `<span class="estado">${vt.estado(vt.v)}</span>` : '';
-    el.innerHTML = `${vt.big ? valor : vt.v.toFixed(vt.dec).replace('.', ',')}<small>${vt.u}</small>${estado}`;
-    const d = vt.v - prev;
-    t.textContent = Math.abs(d) < vt.paso * 0.15 ? '·' : d > 0 ? '▲' : '▼';
-    t.className = 'vtend ' + (Math.abs(d) < vt.paso * 0.15 ? '' : d > 0 ? 'up' : 'dn');
-    dibujarSpark(i, vt);
   });
+  for (let s = 0; s < SLOTS_VIT; s++) {
+    const vt = VITALES[vitVisibles[s]];
+    renderVital(s, vt.enum ? undefined : vt.v - vt.prev);
+  }
 }
 
-function dibujarSpark(i, vt) {
-  const c = $(`#vc${i}`);
+function rotarVital() {
+  const libres = VITALES.map((_, i) => i).filter((i) => !vitVisibles.includes(i));
+  if (!libres.length) return;
+  const slot = randi(0, SLOTS_VIT - 1);
+  const nuevo = pick(libres);
+  const fila = vitFilas[slot];
+  fila.classList.add('cambio');
+  setTimeout(() => {
+    vitVisibles[slot] = nuevo;
+    renderVital(slot);
+    requestAnimationFrame(() => fila.classList.remove('cambio'));
+  }, 300);
+}
+
+function dibujarSpark(c, vt) {
   if (!c) return;
   const dpr = Math.min(devicePixelRatio, 2);
   const w = c.clientWidth || 70, h = c.clientHeight || 23;
@@ -441,7 +489,7 @@ const TIERRA = [];
   }
 })();
 
-const mapa = { eventos: [], W: 0, H: 0, base: null, activa: null, nEventos: 0 };
+const mapa = { eventos: [], W: 0, H: 0, activa: null, nEventos: 0 };
 
 function iniciarMapa() {
   const wrap = $('#mapaWrap');
@@ -454,56 +502,57 @@ function iniciarMapa() {
   const B = { lonMin: -73.6, lonMax: -53.4, latMin: -55.4, latMax: -21.6 };
 
   let escala = 1, offX = 0, offY = 0;
+  let PTS = []; // tierra proyectada (coords base)
   function calcularProyeccion() {
     const spanX = (B.lonMax - B.lonMin) * KX;
     const spanY = B.latMax - B.latMin;
-    const m = 26; // margen
+    const m = 14; // margen chico: que la patria ocupe el panel
     escala = Math.min((mapa.W - m * 2) / spanX, (mapa.H - m * 2) / spanY);
     offX = (mapa.W - spanX * escala) / 2;
     offY = (mapa.H - spanY * escala) / 2;
-  }
-  const proy = (lon, lat) => [
-    offX + (lon - B.lonMin) * KX * escala,
-    offY + (B.latMax - lat) * escala,
-  ];
-
-  function construirBase() {
-    const oc = document.createElement('canvas');
-    oc.width = mapa.W * dpr; oc.height = mapa.H * dpr;
-    const c = oc.getContext('2d');
-    c.scale(dpr, dpr);
-    TIERRA.forEach(([lon, lat]) => {
-      const [x, y] = proy(lon, lat);
-      c.fillStyle = 'rgba(117,170,219,0.55)';
-      c.fillRect(x - 0.9, y - 0.9, 1.8, 1.8);
-    });
-    CIUDADES.forEach((cd) => {
-      const [x, y] = proy(cd.lon, cd.lat);
-      cd._x = x; cd._y = y;
-      c.fillStyle = 'rgba(246,180,14,0.9)';
-      c.beginPath(); c.arc(x, y, 1.8, 0, 6.28); c.fill();
-    });
-    mapa.base = oc;
+    const proy = (lon, lat) => [
+      offX + (lon - B.lonMin) * KX * escala,
+      offY + (B.latMax - lat) * escala,
+    ];
+    PTS = TIERRA.map(([lon, lat]) => proy(lon, lat));
+    CIUDADES.forEach((cd) => { [cd._x, cd._y] = proy(cd.lon, cd.lat); });
   }
 
   function redim() {
     mapa.W = wrap.clientWidth; mapa.H = wrap.clientHeight;
     if (!mapa.W) return;
     canvas.width = mapa.W * dpr; canvas.height = mapa.H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     calcularProyeccion();
-    construirBase();
   }
   new ResizeObserver(redim).observe(wrap);
   redim();
 
-  /* click = reporte manual de argentinidad */
+  /* ── cámara: paneo lento en reposo, zoom suave al evento ── */
+  const cam = { z: 1.18, cx: 0, cy: 0 };
+  let focoHasta = 0;      // timestamp hasta el cual seguimos enfocando
+  let tIdle = rand(0, 100);
+
+  const clampCam = (c) => {
+    // que el viewport no se salga del lienzo
+    c.cx = clamp(c.cx, mapa.W / (2 * c.z), mapa.W - mapa.W / (2 * c.z));
+    c.cy = clamp(c.cy, mapa.H / (2 * c.z), mapa.H - mapa.H / (2 * c.z));
+    return c;
+  };
+
+  const aPantalla = (x, y) => [
+    (x - cam.cx) * cam.z + mapa.W / 2,
+    (y - cam.cy) * cam.z + mapa.H / 2,
+  ];
+
+  /* click = reporte manual (en coords de mundo) */
   wrap.addEventListener('click', (e) => {
     const r = wrap.getBoundingClientRect();
-    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const wx = (sx - mapa.W / 2) / cam.z + cam.cx;
+    const wy = (sy - mapa.H / 2) / cam.z + cam.cy;
     let mejor = null, mejorD = 1e9;
     CIUDADES.forEach((cd) => {
-      const d = (cd._x - cx) ** 2 + (cd._y - cy) ** 2;
+      const d = (cd._x - wx) ** 2 + (cd._y - wy) ** 2;
       if (d < mejorD) { mejorD = d; mejor = cd; }
     });
     if (mejor) dispararEvento(mejor, 'reporte ciudadano: actividad argenta confirmada a ojo');
@@ -513,6 +562,7 @@ function iniciarMapa() {
     mapa.eventos.push({ x: cd._x, y: cd._y, t: 0 });
     mapa.activa = cd;
     mapa.nEventos++;
+    focoHasta = performance.now() + 4600;
     $('#hudEventos').textContent = `EVT ${mapa.nEventos}`;
   };
 
@@ -523,39 +573,96 @@ function iniciarMapa() {
     prev = now;
     if (!mapa.W) return;
 
-    ctx.clearRect(0, 0, mapa.W, mapa.H);
-    if (mapa.base) ctx.drawImage(mapa.base, 0, 0, mapa.W, mapa.H);
+    /* ── objetivo de cámara ── */
+    tIdle += dt;
+    let obj;
+    if (mapa.activa && now < focoHasta) {
+      obj = clampCam({ z: 2.35, cx: mapa.activa._x, cy: mapa.activa._y });
+    } else {
+      // paneo perezoso por el territorio, apenas acercado
+      obj = clampCam({
+        z: 1.22,
+        cx: mapa.W / 2 + Math.sin(tIdle * 0.11) * mapa.W * 0.07,
+        cy: mapa.H / 2 + Math.cos(tIdle * 0.08) * mapa.H * 0.09,
+      });
+    }
+    const k = 1 - Math.exp(-dt * 2.4); // ease exponencial, suave
+    cam.z += (obj.z - cam.z) * k;
+    cam.cx += (obj.cx - cam.cx) * k;
+    cam.cy += (obj.cy - cam.cy) * k;
+    clampCam(cam);
 
-    /* pings */
+    /* ── dibujo en espacio de mundo (transform de cámara) ── */
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, mapa.W, mapa.H);
+    ctx.setTransform(
+      dpr * cam.z, 0, 0, dpr * cam.z,
+      dpr * (mapa.W / 2 - cam.cx * cam.z),
+      dpr * (mapa.H / 2 - cam.cy * cam.z)
+    );
+
+    /* tierra: los puntos escalan con el zoom (más legible de cerca) */
+    ctx.fillStyle = 'rgba(117,170,219,0.55)';
+    const d2 = 2.1, r2 = d2 / 2;
+    for (let i = 0; i < PTS.length; i++) {
+      ctx.fillRect(PTS[i][0] - r2, PTS[i][1] - r2, d2, d2);
+    }
+
+    /* ciudades */
+    ctx.fillStyle = 'rgba(246,180,14,0.9)';
+    CIUDADES.forEach((cd) => {
+      ctx.beginPath(); ctx.arc(cd._x, cd._y, 2.1, 0, 6.28); ctx.fill();
+    });
+
+    /* pings (en mundo) */
     for (let i = mapa.eventos.length - 1; i >= 0; i--) {
       const e = mapa.eventos[i];
       e.t += dt;
-      const k = e.t / 1.9;
-      ctx.strokeStyle = `rgba(255,107,53,${0.9 * (1 - k)})`;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath(); ctx.arc(e.x, e.y, k * 30, 0, 6.28); ctx.stroke();
-      if (k < 0.4) {
-        ctx.fillStyle = `rgba(246,180,14,${1 - k * 2.5})`;
+      const kk = e.t / 1.9;
+      ctx.strokeStyle = `rgba(255,107,53,${0.9 * (1 - kk)})`;
+      ctx.lineWidth = 1.6 / cam.z;
+      ctx.beginPath(); ctx.arc(e.x, e.y, kk * 26, 0, 6.28); ctx.stroke();
+      if (kk < 0.4) {
+        ctx.fillStyle = `rgba(246,180,14,${1 - kk * 2.5})`;
         ctx.beginPath(); ctx.arc(e.x, e.y, 3.5, 0, 6.28); ctx.fill();
       }
-      if (k >= 1) mapa.eventos.splice(i, 1);
+      if (kk >= 1) mapa.eventos.splice(i, 1);
     }
 
-    /* mira sobre ciudad activa */
-    if (mapa.activa && mapa.activa._x) {
-      const a = mapa.activa, s = 7;
-      ctx.strokeStyle = 'rgba(246,180,14,0.65)';
-      ctx.lineWidth = 1;
+    /* ── capa de pantalla: mira y etiquetas nítidas ── */
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (mapa.activa) {
+      const [ax, ay] = aPantalla(mapa.activa._x, mapa.activa._y);
+      const s = 9;
+      ctx.strokeStyle = 'rgba(246,180,14,0.7)';
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(a._x - s, a._y); ctx.lineTo(a._x - 3, a._y);
-      ctx.moveTo(a._x + 3, a._y); ctx.lineTo(a._x + s, a._y);
-      ctx.moveTo(a._x, a._y - s); ctx.lineTo(a._x, a._y - 3);
-      ctx.moveTo(a._x, a._y + 3); ctx.lineTo(a._x, a._y + s);
+      ctx.moveTo(ax - s, ay); ctx.lineTo(ax - 4, ay);
+      ctx.moveTo(ax + 4, ay); ctx.lineTo(ax + s, ay);
+      ctx.moveTo(ax, ay - s); ctx.lineTo(ax, ay - 4);
+      ctx.moveTo(ax, ay + 4); ctx.lineTo(ax, ay + s);
       ctx.stroke();
-      ctx.font = '8px "Chivo Mono"';
-      ctx.fillStyle = 'rgba(246,180,14,0.8)';
-      ctx.textAlign = a._x > mapa.W / 2 ? 'right' : 'left';
-      ctx.fillText(a.n, a._x + (a._x > mapa.W / 2 ? -10 : 10), a._y - 6);
+      if (ay < mapa.H - 42) { // no pisar el caption de abajo
+        ctx.font = '700 12px "Chivo Mono"';
+        ctx.fillStyle = 'rgba(246,180,14,0.95)';
+        ctx.textAlign = ax > mapa.W / 2 ? 'right' : 'left';
+        ctx.fillText(mapa.activa.n, ax + (ax > mapa.W / 2 ? -13 : 13), ay - 8);
+      }
+    }
+
+    /* etiquetas de ciudades cercanas cuando hay zoom */
+    if (cam.z > 1.55) {
+      const alfa = clamp((cam.z - 1.55) / 0.6, 0, 0.75);
+      ctx.font = '10px "Chivo Mono"';
+      ctx.fillStyle = `rgba(168,203,233,${alfa})`;
+      CIUDADES.forEach((cd) => {
+        if (cd === mapa.activa) return;
+        const [sx, sy] = aPantalla(cd._x, cd._y);
+        if (sx < 14 || sx > mapa.W - 14 || sy < 14 || sy > mapa.H - 42) return;
+        ctx.textAlign = sx > mapa.W / 2 ? 'right' : 'left';
+        ctx.fillText(cd.n, sx + (sx > mapa.W / 2 ? -9 : 9), sy + 3);
+      });
     }
   })(prev);
 }

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placebo Ops Prompt</title>
+<style>
+  :root {
+    --bg: #f4f5f4;
+    --ink: #1c2222;
+    --soft: #5a6663;
+    --line: #d9ddda;
+    --accent: #a35a17;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181a;
+      --ink: #e4e7e6;
+      --soft: #97a29e;
+      --line: #2b3134;
+      --accent: #dd9552;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 4rem 1.25rem 5rem;
+  }
+  h1 {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+    letter-spacing: 0.02em;
+  }
+  .sub {
+    color: var(--soft);
+    font-size: 0.85rem;
+    margin: 0 0 2rem;
+  }
+  button {
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--bg);
+    background: var(--accent);
+    border: 0;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+  }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  pre {
+    margin: 0;
+    padding: 1.5rem 0 0;
+    border-top: 1px solid var(--line);
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Placebo Ops</h1>
+  <p class="sub">One prompt, given verbatim to each model. One attempt per model, no extra context.</p>
+  <button id="copy">Copy prompt</button>
+  <pre id="prompt">## Instructions for the model
+
+Build a **100% fictional real-time monitoring dashboard** as a standalone
+web page. It has to look and feel like a serious tool running in production,
+monitoring a real situation out there — but everything is invented. Nobody
+operates it. Nothing it shows exists.
+
+Work inside a folder named after your model (e.g. `my-model/`).
+Do not open or read any other folder in the repository.
+
+### 1. Tone and identity — your call
+
+Pick a **mix of at least two** of these registers (the proportions are yours):
+
+- **Corporate serious** — NOC/SRE, SLAs, tickets, enterprise jargon
+- **Political satire** — bureaucracy, committees, light geopolitics, institutional doublespeak
+- **Sci-fi** — space agencies, anomalous signals, containment protocols
+- **Raw technical** — telemetry, logs, units of measurement, obsessive precision
+
+Never a single pure register: the fun is in the mix. Invent the product's
+name, its visual identity, its implied backstory. Commit to a strong,
+coherent aesthetic — any one you want, but make it a decision, not a default.
+
+### 2. Content — you generate it
+
+You define **what** the dashboard monitors and **how many** event types
+exist. There is no given list: invent your own universe of metrics, alerts,
+incidents and actors. Content requirements:
+
+- Serious and absurd must be **indistinguishable at first glance**.
+- Enough event variety that watching it for 5 minutes never feels
+  repetitive or like an obvious loop.
+- It must feel like a **real situation being monitored**: events should
+  suggest a narrative (things start, escalate, get resolved, leave
+  consequences), not disconnected random noise.
+
+### 3. Dynamics — the dashboard is alive
+
+- **Variable rhythm**: moments of operational calm, bursts of activity,
+  and occasionally some genuine chaos. Not a uniform tick every N seconds.
+- **Mixed severities**: not everything is a red alert. Info, warnings,
+  successes, degradations, recoveries. Red must be rare so it matters.
+- **Sense of progress**: things that advance and finish — tasks completing,
+  incidents closing, counters reaching their target.
+- **Real actions**: at least some visible controls must actually do
+  something within the page (resolve, acknowledge, mute, escalate).
+  No purely decorative buttons.
+- **Alternating order and chaos**: the system sometimes stabilizes,
+  sometimes overflows. The dashboard's overall state should have cycles
+  of its own.
+
+### 4. Technical freedom — your call, 100%
+
+Choose your own stack based on your plan: any libraries or none, CSS-only
+graphics, 2D canvas, SVG, WebGL/GLSL shaders, 3D — whatever serves the
+concept. The only requirement is **coherence**: every technical choice must
+serve the identity and dynamics you designed, not be tech for tech's sake.
+Own the decision and be able to justify it.
+
+### 5. Hard rules (the only ones)
+
+1. Standalone: open `index.html` in a browser and it works. CDNs allowed.
+2. Everything fake. No backend, no real data, no external API calls.
+3. No native browser `alert()`/`confirm()`.
+4. High quality and fidelity: don't stop until it looks like real
+   production software.
+5. **Everything fits in one screen**: the full dashboard fits a desktop
+   viewport with no vertical or horizontal scroll. Not a single pixel out.
+6. **Smooth animations**: all motion must be fluid and eased (GSAP
+   recommended). Nothing rough or abrupt — no hard jumps, no elements
+   appearing/disappearing without transition, no reflows pushing the layout.
+7. Don't ask anything: make every decision yourself and execute.
+
+### 6. Document your decisions
+
+When you finish, write a `DECISIONS.md` in your folder explaining:
+
+- Which mix of tones you chose and why
+- What universe/situation you invented to monitor
+- How many event types you created and how you handle rhythm (calm/chaos)
+- Stack and relevant technical decisions — and why they fit the concept
+- Which decision you believe sets your version apart from any other possible one</pre>
+</main>
+<script>
+  var btn = document.getElementById('copy');
+  var text = document.getElementById('prompt').textContent;
+  btn.addEventListener('click', function () {
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy prompt'; }, 1500);
+    });
+  });
+</script>
+</body>
+</html>
