@@ -131,6 +131,26 @@ const REGIONS = [
   { name: 'POLAR ANNEX',     v: 97 },
 ];
 
+/* Larger pool the ledger rotates through — the 7 map macro-regions
+   plus extra sub-jurisdictions (some geographic, some absurd). */
+const LEDGER_POOL = [
+  ...REGIONS, // by reference — drifting these also feeds the map choropleth + quorum
+  { name: 'BOREAL FRONTIER', v: 66 },
+  { name: 'MERIDIAN ARC',    v: 73 },
+  { name: 'TEMPORAL BUFFER', v: 81 },
+  { name: 'BISCUIT ZONE 7',  v: 59 },
+  { name: 'QUIET QUARTER',   v: 88 },
+  { name: 'LUNCH PERIMETER', v: 64 },
+  { name: 'SMALLTALK BASIN', v: 70 },
+  { name: 'PUNCTUALITY BELT',v: 47 },
+  { name: 'CONSENSUS SHELF', v: 92 },
+  { name: 'ELEVATOR SHAFT',  v: 76 },
+  { name: 'STATIONERY WING', v: 68 },
+  { name: 'COFFEE CORRIDOR', v: 61 },
+  { name: 'MONDAY MARGIN',   v: 43 },
+  { name: 'FOOTNOTE ANNEX',  v: 85 },
+];
+
 const POSTURES = [
   { label: 'DECOROUS',    cls: '' },
   { label: 'CORDIAL',     cls: '' },
@@ -487,26 +507,56 @@ function initGauges() {
 
 function initLedger() {
   const wrap = $('#ledger');
-  REGIONS.forEach((r, i) => {
+  const SLOTS = 7;
+  const shown = Array.from({ length: SLOTS }, (_, i) => i); // pool index per visible slot
+
+  const rows = [];
+  for (let i = 0; i < SLOTS; i++) {
     const el = document.createElement('div');
     el.className = 'lrow';
-    el.innerHTML = `<span class="lname">${r.name}</span>
-      <div class="ltrack"><div class="lfill" id="lf${i}"></div></div>
-      <span class="lval" id="lv${i}">—<small>%</small></span>`;
+    el.innerHTML = `<span class="lname"></span>
+      <div class="ltrack"><div class="lfill"></div></div>
+      <span class="lval"></span>`;
     wrap.appendChild(el);
-  });
-  function update() {
-    REGIONS.forEach((r, i) => {
-      r.v = clamp(r.v + rand(-4, 4), 38, 99);
-      const f = $(`#lf${i}`), v = $(`#lv${i}`);
-      f.style.width = r.v + '%';
-      f.className = 'lfill' + (r.v < 52 ? ' low' : r.v < 66 ? ' warn' : '');
-      v.innerHTML = `${Math.round(r.v)}<small>%</small>`;
-    });
+    rows.push(el);
+  }
+
+  function renderSlot(i) {
+    const r = LEDGER_POOL[shown[i]];
+    const row = rows[i];
+    row.querySelector('.lname').textContent = r.name;
+    const f = row.querySelector('.lfill');
+    f.style.width = r.v + '%';
+    f.className = 'lfill' + (r.v < 52 ? ' low' : r.v < 66 ? ' warn' : '');
+    row.querySelector('.lval').innerHTML = `${Math.round(r.v)}<small>%</small>`;
+  }
+
+  function drift() {
+    LEDGER_POOL.forEach((r) => { r.v = clamp(r.v + rand(-4, 4), 38, 99); });
+    for (let i = 0; i < SLOTS; i++) renderSlot(i);
     updateQuorum();
   }
-  update();
-  setInterval(update, 3400);
+
+  function rotate() {
+    const available = LEDGER_POOL
+      .map((_, idx) => idx)
+      .filter((idx) => !shown.includes(idx));
+    if (!available.length) return;
+    const slot = randi(0, SLOTS - 1);
+    const next = pick(available);
+    const row = rows[slot];
+    row.classList.add('swapping');
+    setTimeout(() => {
+      shown[slot] = next;
+      renderSlot(slot);
+      requestAnimationFrame(() => row.classList.remove('swapping'));
+    }, 320);
+  }
+
+  for (let i = 0; i < SLOTS; i++) renderSlot(i);
+  drift();
+  setInterval(drift, 3400);
+  setInterval(rotate, 5500);
 }
 
 /* ═══════════════ RESOLUTIONS (SEC·C) ═══════════════ */

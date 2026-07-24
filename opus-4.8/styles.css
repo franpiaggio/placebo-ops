@@ -243,7 +243,8 @@ body.convened .panel,body.convened .masthead,body.convened .ticker{
 .ledger{flex:1;overflow-y:auto;padding:8px 10px;min-height:0}
 .ledger::-webkit-scrollbar{width:4px}
 .ledger::-webkit-scrollbar-thumb{background:var(--line-hi)}
-.lrow{display:flex;align-items:center;gap:8px;margin:6px 0}
+.lrow{display:flex;align-items:center;gap:8px;margin:6px 0;transition:opacity .3s, transform .3s}
+.lrow.swapping{opacity:.12;transform:translateX(10px)}
 .lrow .lname{
   width:96px;flex-shrink:0;font-size:9px;letter-spacing:.06em;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
